@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>两种阅读距离 · Rabbit3</title>
+  <link rel="stylesheet" href="/site.css">
+  <link rel="stylesheet" href="/site-theme.css">
+  
+</head>
+<body class="public-site">
+  <header class="site-header">
+    <a class="brand" href="/"><span class="brand-mark">R</span><span>Rabbit3</span></a>
+    <nav><a href="/">HOME</a><a href="/Now.html">NOW</a><a href="/About.html">ABOUT</a></nav>
+  </header>
+  <main class="site-main single-page">
+    <a class="back-button" href="/Now.html" data-rabbit-return-now>← NOW</a>
+    <div class="page-date">08 AUG 2026 · 09:15</div>
+    
+    <article class="page-content"><div><h1>两种阅读距离</h1>
+<p>有些图像需要退后一步，有些文字需要靠近一些。</p>
+<div class="split-story">
+  <img src="https://images.unsplash.com/photo-1482192505345-5655af888cc4?auto=format&fit=crop&w=1600&q=82" alt="旷野中的人物">
+  <div>
+    <small>FIELD NOTE · 08</small>
+    <p>页面不必永远是一条居中的正文列。HTML 可以在必要时改变阅读距离。</p>
+  </div>
+</div>
+<p>然后回到普通 Markdown，继续写下一段。</p>
+</div></article>
+  </main>
+  <footer class="site-footer"><p>Ideas · Stories · Worlds · Experiments</p><div><span>© 2026 Rabbit</span></div></footer>
+  <script>
+(() => {
+  document.addEventListener("click", (event) => {
+    const link = event.target instanceof Element ? event.target.closest("[data-rabbit-return-now]") : null;
+    if (!link || !document.referrer) return;
+    try {
+      const previous = new URL(document.referrer);
+      if (previous.origin === window.location.origin && previous.pathname === "/Now.html") {
+        event.preventDefault();
+        window.history.back();
+      }
+    } catch {}
+  });
+})();
+</script>
+</body>
+</html>

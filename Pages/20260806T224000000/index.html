@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>一个 Page 的最小形状 · Rabbit3</title>
+  <link rel="stylesheet" href="/site.css">
+  <link rel="stylesheet" href="/site-theme.css">
+  
+</head>
+<body class="public-site">
+  <header class="site-header">
+    <a class="brand" href="/"><span class="brand-mark">R</span><span>Rabbit3</span></a>
+    <nav><a href="/">HOME</a><a href="/Now.html">NOW</a><a href="/About.html">ABOUT</a></nav>
+  </header>
+  <main class="site-main single-page">
+    <a class="back-button" href="/Now.html" data-rabbit-return-now>← NOW</a>
+    <div class="page-date">06 AUG 2026 · 22:40</div>
+    
+    <article class="page-content"><div><h1>一个 Page 的最小形状</h1>
+<p>Page 的核心并不复杂：</p>
+<pre><code class="language-text">Page = Metadata + Markdown + optional HTML + optional CSS + Media
+</code></pre>
+<p>复杂性应该来自作品本身，而不是发布表单。</p>
+</div></article>
+  </main>
+  <footer class="site-footer"><p>Ideas · Stories · Worlds · Experiments</p><div><span>© 2026 Rabbit</span></div></footer>
+  <script>
+(() => {
+  document.addEventListener("click", (event) => {
+    const link = event.target instanceof Element ? event.target.closest("[data-rabbit-return-now]") : null;
+    if (!link || !document.referrer) return;
+    try {
+      const previous = new URL(document.referrer);
+      if (previous.origin === window.location.origin && previous.pathname === "/Now.html") {
+        event.preventDefault();
+        window.history.back();
+      }
+    } catch {}
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+:root {
+  --paper: #111318;
+  --ink: #f0ede5;
+  --muted: #949aa6;
+  --line: #2a2e37;
+  --orange: #ff6b3d;
+  --page-content-width: 720px;
+  --page-font-size: 18px;
+  --page-line-height: 1.76;
+  --page-image-radius: 11px;
+  --page-body-font: Georgia, "Times New Roman", serif;
+  --page-heading-font: Arial, Helvetica, sans-serif;
+  --page-h1-size: 50px;
+  --page-h2-size: 29px;
+  --page-h3-size: 22px;
+  --page-heading-line-height: 1.1;
+  --page-paragraph-gap: 1.3em;
+}

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>## *Markdown* 转图片转换器 · Rabbit3</title>
+  <link rel="stylesheet" href="/site.css">
+  <link rel="stylesheet" href="/site-theme.css">
+  
+</head>
+<body class="public-site">
+  <header class="site-header">
+    <a class="brand" href="/"><span class="brand-mark">R</span><span>Rabbit3</span></a>
+    <nav><a href="/">HOME</a><a href="/Now.html">NOW</a><a href="/About.html">ABOUT</a></nav>
+  </header>
+  <main class="site-main single-page">
+    <a class="back-button" href="/Now.html" data-rabbit-return-now>← NOW</a>
+    <div class="page-date">11 AUG 2026 · 19:14</div>
+    
+    <article class="page-content"><div><h2><em>Markdown</em> 转图片转换器</h2>
+<p>这是一个<strong>强大的工具</strong>，可以将您的Markdown转换为精美的图片和PDF。</p>
+<figure class="page-image"><img src="https://th.bing.com/th/id/OIP.48dOTeaOh2V8PJFLpOsvbwHaE8?w=252&amp;h=180&amp;c=7&amp;r=0&amp;o=7&amp;dpr=2&amp;pid=1.7&amp;rm=3" alt="图片"></figure>
+<h3>功能特点</h3>
+<ul>
+<li>使用Markdown进行丰富的文本格式化</li>
+<li>代码语法高亮</li>
+<li>表格和列表</li>
+<li>数学公式（KaTeX）</li>
+<li>图表（Mermaid）</li>
+</ul>
+<blockquote>
+<p>自定义主题、字体和导出设置，创建专业文档</p>
+</blockquote>
+<h3>表格示例</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>描述</th>
+<th>支持</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数学公式</td>
+<td>使用KaTeX语法表示方程式</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>图表</td>
+<td>使用Mermaid语法创建流程图</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>代码</td>
+<td>语法高亮</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<h3>代码示例</h3>
+<pre><code class="language-javascript">// 计算阶乘的简单函数
+function factorial(n) {
+  if (n &lt;= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+console.log(factorial(5)); // 120
+</code></pre>
+<h3>数学公式</h3>
+<p>行内公式: $E = mc^2$</p>
+<p>块级公式:</p>
+<p>$$
+\frac{d}{dx}\left( \int_{a}^{x} f(u),du\right)=f(x)
+$$</p>
+<h3>Mermaid图表</h3>
+<pre><code class="language-mermaid">flowchart LR
+    A[开始] --&gt; B{决策}
+    B --&gt;|是| C[流程1]
+    B --&gt;|否| D[流程2]
+    C --&gt; E[结束]
+    D --&gt; E
+</code></pre>
+<p>编辑此内容或粘贴您自己的Markdown，查看它如何转换为精美的图片或PDF。</p>
+</div></article>
+  </main>
+  <footer class="site-footer"><p>Ideas · Stories · Worlds · Experiments</p><div><span>© 2026 Rabbit</span></div></footer>
+  <script>
+(() => {
+  document.addEventListener("click", (event) => {
+    const link = event.target instanceof Element ? event.target.closest("[data-rabbit-return-now]") : null;
+    if (!link || !document.referrer) return;
+    try {
+      const previous = new URL(document.referrer);
+      if (previous.origin === window.location.origin && previous.pathname === "/Now.html") {
+        event.preventDefault();
+        window.history.back();
+      }
+    } catch {}
+  });
+})();
+</script>
+</body>
+</html>
