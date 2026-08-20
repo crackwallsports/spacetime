@@ -1,6 +1,7 @@
 {
+  "basePath": "/spacetime",
   "version": 2,
-  "fingerprint": "9e8fab5579a76db30829e4454bbeffa74f2b014a3804cc46b890655235676a06",
+  "fingerprint": "eed611fbcce8bccf1b6a3223488b9a14b5381b8235f0b61c8faa6ba8e7f78d50",
   "entries": {
     "asset:20260807T120000000/style.css": "667452f3b06e1cef8434b1bf933eac2356576953c3d710769e3c1469e2154064",
     "asset:20260811T165500000/Man-looking-for-sock-202608111555-1.jpeg": "cc481ece51be421ca7df24b4449bb1cd4f29fb1713defbabcb520afab685dd66",
@@ -18,7 +19,7 @@
     "engine:lib/site-config.mjs": "436974f99bf22a6ce2457f0dcdc787ce70e321da1ea8800f61a0fbe2b629a350",
     "engine:lib/site-navigation.ts": "07148f3149f8d66eb594d187e74093ca51a798ba9c11e18918d1f02e616db322",
     "engine:lib/validation.ts": "d33ad321b04c28644fd4c2d77550fb5c8f4930fde6ea039eb2855192d07e175c",
-    "engine:scripts/build-site.ts": "3d23e3ff69524b627e6d6d627d1d1b0337e70d604b6339303dc68135b740a91d",
+    "engine:scripts/build-site.ts": "de72aa9eeee6b62816ba96f31161b747879caeedad0ef1898c590b06d5883c63",
     "page:20260805T063000000": "d8de83877eaebb82f76d2bd443abb8ce3d82963f248b1776bfd3aeff74c73d56",
     "page:20260806T224000000": "7407c2c90f859e287b33ae33de764816ce84b6de7fc660f72aaa337826622a2a",
     "page:20260807T120000000": "e4997ec50c7e708999a60cb86743d610c29d82c986a0cd02eab9ac26635d9d80",
@@ -98,5 +99,5 @@
       "Theme/branding/Man-looking-for-sock-202608111555-1.jpeg"
     ]
   },
-  "builtAt": "2026-08-20T09:58:52.552Z"
+  "builtAt": "2026-08-20T10:15:20.843Z"
 }
