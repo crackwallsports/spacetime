@@ -4,6 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pagination Three · Rabbit3</title>
+  <meta name="description" content="A compact pagination fixture.">
+  <link rel="canonical" href="/spacetime/Pages/20260612T000000001/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Pagination Three">
+  <meta property="og:description" content="A compact pagination fixture.">
+  <meta property="og:url" content="/spacetime/Pages/20260612T000000001/">
+  
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="/spacetime/site.css">
   <link rel="stylesheet" href="/spacetime/site-theme.css">
   
@@ -14,7 +22,7 @@
     <nav><a href="/spacetime/">HOME</a><a href="/spacetime/Now.html">NOW</a><a href="/spacetime/Archive.html">ARCHIVE</a><a href="/spacetime/About.html">ABOUT</a></nav>
   </header>
   <main class="site-main single-page">
-    <a class="back-button" href="/spacetime/Now.html" data-rabbit-return-now>← NOW</a>
+    <a class="back-button" href="/spacetime/Now.html" data-rabbit-return>← NOW</a>
     <div class="page-date">12 JUN 2026 · 00:00</div>
     
     <article class="page-content"><div><p>A compact pagination fixture.</p>
@@ -23,12 +31,40 @@
   <footer class="site-footer"><p>Ideas · Stories · Worlds · Experiments</p><div><span>© 2026 Rabbit</span></div></footer>
   <script>
 (() => {
+  const currentPath = window.location.pathname;
+  const pagesMarker = currentPath.indexOf("/Pages/");
+  const specialPath = ["/Now.html", "/Archive.html", "/About.html"].find((path) => currentPath.endsWith(path));
+  const basePath = pagesMarker >= 0
+    ? currentPath.slice(0, pagesMarker)
+    : specialPath
+      ? currentPath.slice(0, -specialPath.length)
+      : currentPath.endsWith("/") ? currentPath.slice(0, -1) : currentPath;
+  const sitePath = (pathname) => {
+    if (basePath && pathname.startsWith(basePath + "/")) return pathname.slice(basePath.length) || "/";
+    return pathname;
+  };
+  const previousLabel = (referrer) => {
+    try {
+      const previous = new URL(referrer);
+      if (previous.origin !== window.location.origin) return "NOW";
+      return ({ "/Now.html": "NOW", "/Archive.html": "ARCHIVE", "/About.html": "ABOUT", "/": "HOME" })[sitePath(previous.pathname)] || "BACK";
+    } catch {
+      return "NOW";
+    }
+  };
+  const returnLink = document.querySelector("[data-rabbit-return]");
+  if (returnLink) returnLink.textContent = "← " + previousLabel(document.referrer);
+  document.querySelectorAll(".site-header nav a").forEach((link) => {
+    try {
+      if (sitePath(new URL(link.href).pathname) === sitePath(currentPath)) link.setAttribute("aria-current", "page");
+    } catch {}
+  });
   document.addEventListener("click", (event) => {
-    const link = event.target instanceof Element ? event.target.closest("[data-rabbit-return-now]") : null;
+    const link = event.target instanceof Element ? event.target.closest("[data-rabbit-return]") : null;
     if (!link || !document.referrer) return;
     try {
       const previous = new URL(document.referrer);
-      if (previous.origin === window.location.origin && previous.pathname === "/spacetime/Now.html") {
+      if (previous.origin === window.location.origin) {
         event.preventDefault();
         window.history.back();
       }

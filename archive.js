@@ -1,12 +1,12 @@
 (() => {
   const root = document.querySelector("[data-archive-root]");
   if (!root) return;
+  const initialQuery = new URLSearchParams(window.location.search);
   const state = {
     all: [],
-    query: new URLSearchParams(window.location.search),
-    page: 1,
+    query: initialQuery,
+    page: Math.max(1, Number(initialQuery.get("page")) || 1),
     pageSize: 30,
-    append: false,
   };
 
   const basePath = new URL(".", window.location.href).pathname.replace(/\/$/, "");
@@ -46,14 +46,10 @@
     const results = filtered();
     const totalPages = Math.max(1, Math.ceil(results.length / state.pageSize));
     state.page = Math.min(Math.max(1, state.page), totalPages);
-    const visible = results.slice(0, state.page * state.pageSize);
-    const shown = visible.length;
+    const visible = results.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
     const cards = visible.map(card).join("");
-    const hasMore = shown < results.length;
     root.querySelector("[data-archive-results]").innerHTML = cards || `<p class="archive-empty">No Pages match these filters.</p>`;
     root.querySelector("[data-archive-count]").textContent = `${results.length} Page${results.length === 1 ? "" : "s"}`;
-    root.querySelector("[data-archive-more]").hidden = !hasMore;
-    root.querySelector("[data-archive-more]").textContent = `Load more · ${shown} / ${results.length}`;
     root.querySelector("[data-archive-page]").textContent = `Page ${state.page} of ${totalPages}`;
     root.querySelector("[data-archive-prev]").disabled = state.page <= 1;
     root.querySelector("[data-archive-next]").disabled = state.page >= totalPages;
@@ -63,7 +59,7 @@
   function controls() {
     const years = [...new Set(state.all.map((entry) => String(entry.date || "").slice(0, 4)).filter(Boolean))].sort().reverse();
     const tags = [...new Set(state.all.flatMap((entry) => entry.tags || []))].sort((left, right) => left.localeCompare(right));
-    root.innerHTML = `<section class="archive-controls"><label class="archive-search"><span>Search</span><input data-archive-query type="search" placeholder="Title, tag, or excerpt" value="${escapeHtml(state.query.get("q") || "")}"></label><label><span>Tag</span><select data-archive-tag><option value="">All tags</option>${tags.map((tag) => `<option value="${escapeHtml(tag)}">${escapeHtml(tag)}</option>`).join("")}</select></label><label><span>Year</span><select data-archive-year><option value="">All years</option>${years.map((year) => `<option>${year}</option>`).join("")}</select></label><label><span>Sort</span><select data-archive-sort><option value="newest">Newest</option><option value="oldest">Oldest</option></select></label></section><div class="archive-summary"><strong data-archive-count></strong><span data-archive-page></span></div><section class="archive-results" data-archive-results></section><div class="archive-navigation"><button data-archive-prev type="button">Previous</button><button data-archive-more type="button"></button><button data-archive-next type="button">Next</button></div>`;
+    root.innerHTML = `<section class="archive-controls"><label class="archive-search"><span>Search</span><input data-archive-query type="search" placeholder="Title, tag, or excerpt" value="${escapeHtml(state.query.get("q") || "")}"></label><label><span>Tag</span><select data-archive-tag><option value="">All tags</option>${tags.map((tag) => `<option value="${escapeHtml(tag)}">${escapeHtml(tag)}</option>`).join("")}</select></label><label><span>Year</span><select data-archive-year><option value="">All years</option>${years.map((year) => `<option>${year}</option>`).join("")}</select></label><label><span>Sort</span><select data-archive-sort><option value="newest">Newest</option><option value="oldest">Oldest</option></select></label></section><div class="archive-summary" role="status" aria-live="polite"><strong data-archive-count></strong><span data-archive-page></span></div><section class="archive-results" data-archive-results></section><nav class="archive-navigation" aria-label="Archive pagination"><button data-archive-prev type="button">Previous</button><button data-archive-next type="button">Next</button></nav>`;
     const query = root.querySelector("[data-archive-query]");
     const tag = root.querySelector("[data-archive-tag]");
     const year = root.querySelector("[data-archive-year]");
@@ -76,10 +72,16 @@
     tag.addEventListener("change", change);
     year.addEventListener("change", change);
     sort.addEventListener("change", change);
-    root.querySelector("[data-archive-more]").addEventListener("click", () => { state.page += 1; render(); });
     root.querySelector("[data-archive-prev]").addEventListener("click", () => { state.page -= 1; render(); window.scrollTo({ top: 0, behavior: "smooth" }); });
     root.querySelector("[data-archive-next]").addEventListener("click", () => { state.page += 1; render(); window.scrollTo({ top: 0, behavior: "smooth" }); });
   }
+
+  window.addEventListener("popstate", () => {
+    state.query = new URLSearchParams(window.location.search);
+    state.page = Math.max(1, Number(state.query.get("page")) || 1);
+    controls();
+    render();
+  });
 
   fetch(`${basePath}/page-index.json`)
     .then((response) => { if (!response.ok) throw new Error("Archive index unavailable"); return response.json(); })
