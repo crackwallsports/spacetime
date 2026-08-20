@@ -28,7 +28,7 @@
     const year = state.query.get("year") || "";
     const sort = state.query.get("sort") || "newest";
     return state.all.filter((entry) => {
-      const searchable = [entry.title, entry.excerpt, ...(entry.tags || [])].join(" ").toLowerCase();
+      const searchable = entry.searchable ?? [entry.title, entry.excerpt, ...(entry.tags || [])].join(" ").toLowerCase();
       return (!query || searchable.includes(query)) && (!tag || (entry.tags || []).includes(tag)) && (!year || String(entry.date || "").startsWith(year));
     }).sort((left, right) => {
       const direction = sort === "oldest" ? 1 : -1;
@@ -37,7 +37,7 @@
   }
 
   function card(entry) {
-    const cover = entry.cover ? `<img loading="lazy" src="${escapeHtml(siteUrl(entry.cover))}" alt="">` : "<span class=\"archive-card-placeholder\" aria-hidden=\"true\"></span>";
+    const cover = entry.cover ? `<img loading="lazy" decoding="async" src="${escapeHtml(siteUrl(entry.cover))}" alt="${escapeHtml(entry.title || "Page cover")}">` : "<span class=\"archive-card-placeholder\" aria-hidden=\"true\"></span>";
     const tags = (entry.tags || []).slice(0, 3).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
     return `<article class="archive-card"><a href="${escapeHtml(siteUrl(entry.url))}"><div class="archive-card-media">${cover}</div><div class="archive-card-body"><time>${escapeHtml(formatDate(entry.date))}</time><h2>${escapeHtml(entry.title || "Untitled Page")}</h2>${entry.excerpt ? `<p>${escapeHtml(entry.excerpt)}</p>` : ""}<div class="archive-card-tags">${tags}</div></div></a></article>`;
   }
@@ -59,7 +59,7 @@
   function controls() {
     const years = [...new Set(state.all.map((entry) => String(entry.date || "").slice(0, 4)).filter(Boolean))].sort().reverse();
     const tags = [...new Set(state.all.flatMap((entry) => entry.tags || []))].sort((left, right) => left.localeCompare(right));
-    root.innerHTML = `<section class="archive-controls"><label class="archive-search"><span>Search</span><input data-archive-query type="search" placeholder="Title, tag, or excerpt" value="${escapeHtml(state.query.get("q") || "")}"></label><label><span>Tag</span><select data-archive-tag><option value="">All tags</option>${tags.map((tag) => `<option value="${escapeHtml(tag)}">${escapeHtml(tag)}</option>`).join("")}</select></label><label><span>Year</span><select data-archive-year><option value="">All years</option>${years.map((year) => `<option>${year}</option>`).join("")}</select></label><label><span>Sort</span><select data-archive-sort><option value="newest">Newest</option><option value="oldest">Oldest</option></select></label></section><div class="archive-summary" role="status" aria-live="polite"><strong data-archive-count></strong><span data-archive-page></span></div><section class="archive-results" data-archive-results></section><nav class="archive-navigation" aria-label="Archive pagination"><button data-archive-prev type="button">Previous</button><button data-archive-next type="button">Next</button></nav>`;
+    root.innerHTML = `<section class="archive-controls"><label class="archive-search"><span>Search</span><input data-archive-query aria-label="Search title, tag, or excerpt" type="search" placeholder="Title, tag, or excerpt" value="${escapeHtml(state.query.get("q") || "")}"></label><label><span>Tag</span><select data-archive-tag aria-label="Filter by tag"><option value="">All tags</option>${tags.map((tag) => `<option value="${escapeHtml(tag)}">${escapeHtml(tag)}</option>`).join("")}</select></label><label><span>Year</span><select data-archive-year aria-label="Filter by year"><option value="">All years</option>${years.map((year) => `<option>${year}</option>`).join("")}</select></label><label><span>Sort</span><select data-archive-sort aria-label="Sort Pages"><option value="newest">Newest</option><option value="oldest">Oldest</option></select></label></section><div class="archive-summary" role="status" aria-live="polite"><strong data-archive-count></strong><span data-archive-page></span></div><section class="archive-results" aria-live="polite" data-archive-results></section><nav class="archive-navigation" aria-label="Archive pagination"><button data-archive-prev aria-label="Previous Archive page" type="button">Previous</button><button data-archive-next aria-label="Next Archive page" type="button">Next</button></nav>`;
     const query = root.querySelector("[data-archive-query]");
     const tag = root.querySelector("[data-archive-tag]");
     const year = root.querySelector("[data-archive-year]");
@@ -85,6 +85,6 @@
 
   fetch(`${basePath}/page-index.json`)
     .then((response) => { if (!response.ok) throw new Error("Archive index unavailable"); return response.json(); })
-    .then((entries) => { state.all = Array.isArray(entries) ? entries : []; controls(); render(); })
-    .catch(() => { root.innerHTML = '<p class="archive-empty">The Page index could not be loaded. Please try again later.</p>'; });
+    .then((entries) => { state.all = (Array.isArray(entries) ? entries : []).map((entry) => ({ ...entry, searchable: [entry.title, entry.excerpt, ...(entry.tags || [])].join(" ").toLowerCase() })); controls(); render(); })
+    .catch(() => { root.innerHTML = '<p class="archive-empty" role="alert">The Page index could not be loaded. Please try again later.</p>'; });
 })();
