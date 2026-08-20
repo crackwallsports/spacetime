@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>First Snow · Rabbit3</title>
+  <link rel="stylesheet" href="/spacetime/site.css">
+  <link rel="stylesheet" href="/spacetime/site-theme.css">
+  
+</head>
+<body class="public-site">
+  <header class="site-header">
+    <a class="brand" href="/spacetime/"><span class="brand-mark">R</span><span>Rabbit3</span></a>
+    <nav><a href="/spacetime/">HOME</a><a href="/spacetime/Now.html">NOW</a><a href="/spacetime/Archive.html">ARCHIVE</a><a href="/spacetime/About.html">ABOUT</a></nav>
+  </header>
+  <main class="site-main single-page">
+    <a class="back-button" href="/spacetime/Now.html" data-rabbit-return-now>← NOW</a>
+    <div class="page-date">03 NOV 2025 · 00:00</div>
+    
+    <article class="page-content"><div><p>The smallest seasonal example in the sample set.</p>
+</div></article>
+  </main>
+  <footer class="site-footer"><p>Ideas · Stories · Worlds · Experiments</p><div><span>© 2026 Rabbit</span></div></footer>
+  <script>
+(() => {
+  document.addEventListener("click", (event) => {
+    const link = event.target instanceof Element ? event.target.closest("[data-rabbit-return-now]") : null;
+    if (!link || !document.referrer) return;
+    try {
+      const previous = new URL(document.referrer);
+      if (previous.origin === window.location.origin && previous.pathname === "/spacetime/Now.html") {
+        event.preventDefault();
+        window.history.back();
+      }
+    } catch {}
+  });
+})();
+</script>
+</body>
+ </html>
