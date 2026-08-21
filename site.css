@@ -163,6 +163,20 @@ img { display: block; max-width: 100%; }
 .properties-grid input { width: 100%; height: 27px; border: 1px solid #d1d0c9; border-radius: 3px; outline: 0; padding: 0 7px; background: #f9f8f3; color: #3b3a36; font-size: 10px; }
 .properties-grid input:focus { border-color: #8e8d85; box-shadow: 0 0 0 1px #8e8d85; }
 .properties-grid input::placeholder { color: #b1b0a8; }
+.date-input-shell { position: relative; display: flex; align-items: center; }
+.date-input-shell > input { padding-right: 31px; color-scheme: light; }
+.date-input-shell > input::-webkit-calendar-picker-indicator { width: 1px; cursor: pointer; opacity: 0; }
+.date-picker-button { position: absolute; right: 4px; width: 22px; height: 22px; border: 0; border-radius: 3px; padding: 3px; display: grid; place-items: center; background: transparent; color: #77766f; cursor: pointer; }
+.date-picker-button:hover { background: #e7e6df; color: #34342f; }
+.date-picker-button svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+.tag-editor { min-width: 0; min-height: 27px; border: 1px solid #d1d0c9; border-radius: 3px; padding: 3px 5px; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; background: #f9f8f3; }
+.tag-editor:focus-within { border-color: #8e8d85; box-shadow: 0 0 0 1px #8e8d85; }
+.tag-editor > input { flex: 1 1 90px; width: auto; min-width: 90px; height: 19px; border: 0; padding: 0 2px; background: transparent; box-shadow: none; }
+.tag-editor > input:focus { border: 0; box-shadow: none; }
+.tag-chips { display: contents; }
+.tag-chip { display: inline-flex; align-items: center; gap: 3px; border: 1px solid #d0c0b7; border-radius: 10px; padding: 2px 4px 2px 6px; background: #f3e8e1; color: #765341; font-size: 8px; line-height: 1; pointer-events: none; }
+.tag-chip button { flex: 0 0 12px; width: 12px; height: 12px; border: 0; border-radius: 50%; padding: 0; display: grid; place-items: center; background: transparent; color: inherit; font-size: 11px; line-height: 1; pointer-events: auto; cursor: pointer; }
+.tag-chip button:hover { background: #d9b9aa; }
 .properties-grid small { display: block; min-height: 12px; margin: 3px 2px 0; color: #8e8d85; font-size: 8px; line-height: 1.35; }
 .properties-grid .property-error > span,
 .properties-grid .property-error small { color: #a3472e; }
@@ -406,6 +420,12 @@ img { display: block; max-width: 100%; }
 .publisher-shell.is-dark .properties-grid input { border-color: #3e4249; background: #17191c; color: #e4e5e3; }
 .publisher-shell.is-dark .properties-grid input:focus { border-color: #747982; box-shadow: 0 0 0 1px #747982; }
 .publisher-shell.is-dark .properties-grid input::placeholder { color: #5e626a; }
+.publisher-shell.is-dark .date-input-shell > input { color-scheme: dark; }
+.publisher-shell.is-dark .date-picker-button { color: #d6d7d8; }
+.publisher-shell.is-dark .date-picker-button:hover { background: #30333a; color: #fff; }
+.publisher-shell.is-dark .tag-editor { border-color: #3e4249; background: #17191c; }
+.publisher-shell.is-dark .tag-editor:focus-within { border-color: #747982; box-shadow: 0 0 0 1px #747982; }
+.publisher-shell.is-dark .tag-chip { border-color: #5c463e; background: #3a2925; color: #e1a38c; }
 .publisher-shell.is-dark .properties-grid small { color: #7f838b; }
 .publisher-shell.is-dark .properties-grid .property-error > span,
 .publisher-shell.is-dark .properties-grid .property-error small { color: #ff8d69; }
