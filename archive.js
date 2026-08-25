@@ -38,7 +38,10 @@
 
   function card(entry) {
     const cover = entry.cover ? `<img loading="lazy" decoding="async" src="${escapeHtml(siteUrl(entry.cover))}" alt="${escapeHtml(entry.title || "Page cover")}">` : "<span class=\"archive-card-placeholder\" aria-hidden=\"true\"></span>";
-    const tags = (entry.tags || []).slice(0, 3).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
+    const displayTags = entry.tags?.includes("测试用例")
+      ? ["测试用例", ...(entry.tags || []).filter((tag) => tag !== "测试用例")].slice(0, 3)
+      : (entry.tags || []).slice(0, 3);
+    const tags = displayTags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
     return `<article class="archive-card"><a href="${escapeHtml(siteUrl(entry.url))}"><div class="archive-card-media">${cover}</div><div class="archive-card-body"><time>${escapeHtml(formatDate(entry.date))}</time><h2>${escapeHtml(entry.title || "Untitled Page")}</h2>${entry.excerpt ? `<p>${escapeHtml(entry.excerpt)}</p>` : ""}<div class="archive-card-tags">${tags}</div></div></a></article>`;
   }
 
