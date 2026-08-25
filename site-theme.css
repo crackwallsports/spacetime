@@ -15,4 +15,8 @@
   --page-h3-size: 22px;
   --page-heading-line-height: 1.1;
   --page-paragraph-gap: 1.3em;
+  --site-nav-gap: 26px;
+  --site-footer-width: 880px;
+  --site-footer-statement-size: 35px;
+  --site-header-height: 62px;
 }
