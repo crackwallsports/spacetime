@@ -2,11 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://crackwallsports.github.io/spacetime/</loc>
-    <lastmod>2026-08-11T17:20:00+08:00</lastmod>
-  </url>
-  <url>
-    <loc>https://crackwallsports.github.io/spacetime/About.html</loc>
-    <lastmod>2026-08-11T17:20:00+08:00</lastmod>
   </url>
   <url>
     <loc>https://crackwallsports.github.io/spacetime/Archive.html</loc>
@@ -21,5 +16,9 @@
   <url>
     <loc>https://crackwallsports.github.io/spacetime/Pages/20260826T220122561/</loc>
     <lastmod>2026-08-26T22:01:00+08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://crackwallsports.github.io/spacetime/Pages/20260827T194501535/</loc>
+    <lastmod>2026-08-27T19:45:00+08:00</lastmod>
   </url>
 </urlset>
