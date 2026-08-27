@@ -86,7 +86,7 @@
     render();
   });
 
-  fetch(`${basePath}/page-index.json`)
+  fetch(`${basePath}/page-index.json`, { cache: "no-store" })
     .then((response) => { if (!response.ok) throw new Error("Archive index unavailable"); return response.json(); })
     .then((entries) => { state.all = (Array.isArray(entries) ? entries : []).map((entry) => ({ ...entry, searchable: [entry.title, entry.excerpt, ...(entry.tags || [])].join(" ").toLowerCase() })); controls(); render(); })
     .catch(() => { root.innerHTML = '<p class="archive-empty" role="alert">The Page index could not be loaded. Please try again later.</p>'; });

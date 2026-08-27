@@ -13,10 +13,10 @@
   {
     "id": "20260827T194501535",
     "url": "/spacetime/Pages/20260827T194501535/",
-    "title": "发布测试用",
+    "title": "发布测试用 1",
     "date": "2026-08-27T19:45:00+08:00",
     "tags": [],
-    "excerpt": "发布测试用",
+    "excerpt": "发布测试用 1",
     "cover": ""
   },
   {
@@ -28,24 +28,6 @@
       "思想扩展"
     ],
     "excerpt": "![img](概念插画.webp) 再过不久 线上都没人了 人都在线下活动 线上全是AI 😄 再过很久 线下也没人了 线上线下都是人与AI结合体 --- ![漫画](漫画.webp) --- 再过不久，线上可能就没人了 再过不久，线上都没人了。 人都在线下活动，线上全是 AI。😄 再过很久，线下也没人了。 线上线下，都是人与 AI 的结合体。 这最初只是",
-    "cover": ""
-  },
-  {
-    "id": "About.md",
-    "url": "/spacetime/About.html",
-    "title": "About Rabbit",
-    "date": "2026-08-11T17:20:00+08:00",
-    "tags": [],
-    "excerpt": "About Rabbit Rabbit is a personal publishing system built around files, Markdown and static HTML. Write once as Page. Render everywhere.",
-    "cover": ""
-  },
-  {
-    "id": "Home.md",
-    "url": "/spacetime/",
-    "title": "Rabbit",
-    "date": "2026-08-11T17:20:00+08:00",
-    "tags": [],
-    "excerpt": "Rabbit Ideas · Stories · Worlds · Experiments Everything is a Page.",
     "cover": ""
   }
 ]
