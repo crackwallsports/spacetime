@@ -143,14 +143,14 @@
     "cover": ""
   },
   {
-    "id": "20260806T224000000",
-    "url": "/spacetime/Pages/20260806T224000000/",
-    "title": "一个 Page 的最小形状",
-    "date": "2026-08-06T22:40:00+08:00",
+    "id": "20260826T220122561",
+    "url": "/spacetime/Pages/20260826T220122561/",
+    "title": "AI编程观点",
+    "date": "2026-08-26T22:01:00+08:00",
     "tags": [
-      "测试用例"
+      "思想扩展"
     ],
-    "excerpt": "一个 Page 的最小形状 Page 的核心并不复杂： 复杂性应该来自作品本身，而不是发布表单。",
+    "excerpt": "![隐喻插画 1](隐喻插画-1.webp) 我不想学编程，我只想创造软件 我现在越来越不关心编程了。 不是因为我不想创造软件，恰恰相反，我仍然有很多想法：一个个人记忆系统、一套符合自己思维方式的记账工具、一个能够理解意图并不断生长的个人软件系统。 但我不再认为，为了实现这些东西，我就必须先学习命令行、编程语言、框架、数据库、Git、部署，以及一整套软件工程",
     "cover": ""
   },
   {
@@ -357,6 +357,15 @@
     "cover": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=82"
   },
   {
+    "id": "20260827T170256678",
+    "url": "/spacetime/Pages/20260827T170256678/",
+    "title": "而为2 都是",
+    "date": "2026-08-27T17:02:00+08:00",
+    "tags": [],
+    "excerpt": "而为2 都是",
+    "cover": ""
+  },
+  {
     "id": "20260821T154755359",
     "url": "/spacetime/Pages/20260821T154755359/",
     "title": "headline",
@@ -365,7 +374,7 @@
       "顾客",
       "测试用例"
     ],
-    "excerpt": "headline headline2 headline3 headline4 headline5 --- Bold Italic 是 --- reference --- - list1 - 的 - list2 1. ol1 1. 可能 2. 里的可能 2. ol2 3. 考虑 - [x] task1 - [ ] task2 --- inline code -",
+    "excerpt": "headline headline2 headline3 headline4 headline5 --- Bold Italic --- reference --- - list1 - 的 - list2 1. ol1 1. 可能 2. 里的可能 2. ol2 3. 考虑 - [x] task1 - [ ] task2 --- inline code ---",
     "cover": ""
   },
   {
@@ -377,6 +386,17 @@
       "测试用例"
     ],
     "excerpt": "清晨的宽幅 标准正文保持安静，视觉内容可以突破它。 :::wide ![清晨的地平线](https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=82) ::: 宽，不是一种内容类型，只是这个 Page 在此处需要的空间。",
+    "cover": ""
+  },
+  {
+    "id": "20260806T224000000",
+    "url": "/spacetime/Pages/20260806T224000000/",
+    "title": "一个 Page 的最小形状",
+    "date": "2026-08-06T22:40:00+08:00",
+    "tags": [
+      "测试用例"
+    ],
+    "excerpt": "一个 Page 的最小形状 Page 的核心并不复杂： 复杂性应该来自作品本身，而不是发布表单。",
     "cover": ""
   },
   {
