@@ -107,6 +107,20 @@
       });
     });
   };
+  const bindNowImages = () => {
+    document.querySelectorAll('.now-card-media img').forEach((image) => {
+      const markFailed = () => {
+        const item = image.closest('.now-card-media-item');
+        if (!item) return;
+        item.classList.add('is-image-error');
+        image.hidden = true;
+        const fallback = item.querySelector('.now-card-media-fallback');
+        if (fallback) fallback.hidden = false;
+      };
+      image.addEventListener('error', markFailed, { once: true });
+      if (image.complete && image.naturalWidth === 0) markFailed();
+    });
+  };
   const bindPageReading = () => {
     const tocLinks = [...document.querySelectorAll('.page-toc a[href^="#"]')];
     tocLinks.forEach((link) => {
@@ -120,12 +134,24 @@
         }
         if (target) {
           window.history.replaceState(null, '', link.getAttribute('href'));
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const behavior = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+          target.scrollIntoView({ behavior, block: 'start' });
         }
       });
     });
     const tocIds = new Set(tocLinks.map((link) => link.getAttribute('href')?.slice(1)).filter(Boolean));
     const headings = [...document.querySelectorAll('.page-reading-main h1, .page-reading-main h2, .page-reading-main h3, .page-reading-main h4, .page-reading-main h5, .page-reading-main h6')].filter((heading) => tocIds.has(heading.id));
+    const scrollBehavior = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    const keepTocLinkInView = (link) => {
+      const container = link.closest('.page-reading-sidebar');
+      if (!container || container.scrollHeight <= container.clientHeight) return;
+      const linkRect = link.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const padding = 8;
+      if (linkRect.top < containerRect.top + padding) container.scrollTop -= containerRect.top + padding - linkRect.top;
+      else if (linkRect.bottom > containerRect.bottom - padding) container.scrollTop += linkRect.bottom - (containerRect.bottom - padding);
+    };
+    let lastActiveLink;
     const headingIsVisible = (heading) => {
       if (!heading.getClientRects().length) return false;
       let section = heading.closest('details.page-section');
@@ -137,17 +163,26 @@
       return true;
     };
     const setActiveHeading = () => {
-      const current = headings.filter((heading) => headingIsVisible(heading) && heading.getBoundingClientRect().top <= 120).at(-1);
+      const visibleHeadings = headings.filter(headingIsVisible);
+      const current = visibleHeadings.filter((heading) => heading.getBoundingClientRect().top <= 120).at(-1) ?? visibleHeadings[0];
+      const activeLink = current ? tocLinks.find((link) => link.getAttribute('href') === '#' + current.id) : undefined;
       tocLinks.forEach((link) => {
         const active = current && link.getAttribute('href') === '#' + current.id;
         link.parentElement.classList.toggle('is-active', Boolean(active));
         if (active) link.setAttribute('aria-current', 'location');
         else link.removeAttribute('aria-current');
       });
+      if (activeLink && activeLink.getClientRects().length && activeLink !== lastActiveLink) {
+        keepTocLinkInView(activeLink);
+        lastActiveLink = activeLink;
+      } else if (!activeLink) {
+        lastActiveLink = undefined;
+      }
     };
     window.addEventListener('scroll', setActiveHeading, { passive: true });
     setActiveHeading();
     bindImageLightbox();
+    bindNowImages();
     const tocMobileToggle = document.querySelector('.page-toc-mobile-toggle');
     const tocList = document.getElementById('page-toc-list');
     if (tocMobileToggle && tocList) {
@@ -171,7 +206,11 @@
         sections.forEach((section) => { section.open = open; });
         updateTocToggle();
       });
-      sections.forEach((section) => section.addEventListener('toggle', updateTocToggle));
+      const updateReadingState = () => {
+        updateTocToggle();
+        setActiveHeading();
+      };
+      sections.forEach((section) => section.addEventListener('toggle', updateReadingState));
       updateTocToggle();
     }
     const copyLink = document.querySelector('.page-copy-link');
@@ -212,7 +251,7 @@
     const backToTop = document.querySelector('.back-to-top');
     if (backToTop) {
       const updateBackToTop = () => { backToTop.hidden = window.scrollY < window.innerHeight * 0.8; };
-      backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+      backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: scrollBehavior() }));
       window.addEventListener('scroll', updateBackToTop, { passive: true });
       updateBackToTop();
     }

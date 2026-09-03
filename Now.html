@@ -28,28 +28,18 @@
     <div class="timeline"><section class="timeline-item long-item">
       <time>26 AUG 2026 · 22:01</time>
       <a class="content-button" href="/spacetime/Pages/20260826T220122561/">
-        
-        
-        <article class="page-content is-compact"><div><figure class="page-image"><img class="page-image-target" src="/spacetime/Pages/20260826T220122561/%E9%9A%90%E5%96%BB%E6%8F%92%E7%94%BB-1.webp" alt="隐喻插画 1" tabindex="0" role="button"></figure>
-<h1 id="我不想学编程-我只想创造软件">我不想学编程，我只想创造软件</h1>
-<p>我现在越来越不关心编程了。</p>
-</div></article>
-        <span class="read-more">Read full page ↗</span>
+        <div class="now-card now-card-page">
+          <h2 class="now-item-title">AI编程观点</h2><div class="now-card-media"><span class="now-card-media-item"><img src="/spacetime/Pages/20260826T220122561/%E9%9A%90%E5%96%BB%E6%8F%92%E7%94%BB-1.webp" alt="隐喻插画 1" loading="eager" decoding="async" fetchpriority="high"><span class="now-card-media-fallback" hidden role="img" aria-label="Image unavailable">Image unavailable</span></span><span class="now-card-media-item"><img src="/spacetime/Pages/20260826T220122561/%E4%BF%A1%E6%81%AF%E5%9B%BE-2-upscaled.webp" alt="信息图 2 upscaled" loading="lazy" decoding="async"><span class="now-card-media-fallback" hidden role="img" aria-label="Image unavailable">Image unavailable</span></span><span class="now-card-media-item"><img src="/spacetime/Pages/20260826T220122561/%E6%A0%B8%E5%BF%83%E8%A7%86%E8%A7%89%E7%AC%A6%E5%8F%B7-%E5%8D%87%E7%BA%A7-2.webp" alt="核心视觉符号 升级 2" loading="lazy" decoding="async"><span class="now-card-media-fallback" hidden role="img" aria-label="Image unavailable">Image unavailable</span></span></div><p class="now-excerpt">我现在越来越不关心编程了。</p><span class="read-more">Read full page ↗</span>
+        </div>
       </a>
       <div class="item-rule"></div>
     </section>
 <section class="timeline-item long-item">
       <time>25 AUG 2026 · 17:18</time>
       <a class="content-button" href="/spacetime/Pages/20260825T171850776/">
-        
-        
-        <article class="page-content is-compact"><div><h1 id="人ai共生未来">人AI共生未来</h1>
-<figure class="page-image"><img class="page-image-target" src="/spacetime/Pages/20260825T171850776/%E6%A6%82%E5%BF%B5%E6%8F%92%E7%94%BB.webp" alt="img" tabindex="0" role="button"></figure>
-<p>再过不久 线上都没人了<br>
-人都在线下活动<br>
-线上全是AI 😄</p>
-</div></article>
-        <span class="read-more">Read full page ↗</span>
+        <div class="now-card now-card-page">
+          <h2 class="now-item-title">人AI共生未来</h2><div class="now-card-media"><span class="now-card-media-item"><img src="/spacetime/Pages/20260825T171850776/%E6%A6%82%E5%BF%B5%E6%8F%92%E7%94%BB.webp" alt="img" loading="lazy" decoding="async"><span class="now-card-media-fallback" hidden role="img" aria-label="Image unavailable">Image unavailable</span></span><span class="now-card-media-item"><img src="/spacetime/Pages/20260825T171850776/%E6%BC%AB%E7%94%BB.webp" alt="漫画" loading="lazy" decoding="async"><span class="now-card-media-fallback" hidden role="img" aria-label="Image unavailable">Image unavailable</span></span><span class="now-card-media-item"><img src="/spacetime/Pages/20260825T171850776/%E4%BF%A1%E6%81%AF%E5%9B%BE.webp" alt="信息图" loading="lazy" decoding="async"><span class="now-card-media-fallback" hidden role="img" aria-label="Image unavailable">Image unavailable</span></span></div><p class="now-excerpt">再过不久 线上都没人了</p><span class="read-more">Read full page ↗</span>
+        </div>
       </a>
       
     </section></div>
@@ -135,6 +125,20 @@
       });
     });
   };
+  const bindNowImages = () => {
+    document.querySelectorAll('.now-card-media img').forEach((image) => {
+      const markFailed = () => {
+        const item = image.closest('.now-card-media-item');
+        if (!item) return;
+        item.classList.add('is-image-error');
+        image.hidden = true;
+        const fallback = item.querySelector('.now-card-media-fallback');
+        if (fallback) fallback.hidden = false;
+      };
+      image.addEventListener('error', markFailed, { once: true });
+      if (image.complete && image.naturalWidth === 0) markFailed();
+    });
+  };
   const bindPageReading = () => {
     const tocLinks = [...document.querySelectorAll('.page-toc a[href^="#"]')];
     tocLinks.forEach((link) => {
@@ -148,12 +152,24 @@
         }
         if (target) {
           window.history.replaceState(null, '', link.getAttribute('href'));
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const behavior = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+          target.scrollIntoView({ behavior, block: 'start' });
         }
       });
     });
     const tocIds = new Set(tocLinks.map((link) => link.getAttribute('href')?.slice(1)).filter(Boolean));
     const headings = [...document.querySelectorAll('.page-reading-main h1, .page-reading-main h2, .page-reading-main h3, .page-reading-main h4, .page-reading-main h5, .page-reading-main h6')].filter((heading) => tocIds.has(heading.id));
+    const scrollBehavior = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    const keepTocLinkInView = (link) => {
+      const container = link.closest('.page-reading-sidebar');
+      if (!container || container.scrollHeight <= container.clientHeight) return;
+      const linkRect = link.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const padding = 8;
+      if (linkRect.top < containerRect.top + padding) container.scrollTop -= containerRect.top + padding - linkRect.top;
+      else if (linkRect.bottom > containerRect.bottom - padding) container.scrollTop += linkRect.bottom - (containerRect.bottom - padding);
+    };
+    let lastActiveLink;
     const headingIsVisible = (heading) => {
       if (!heading.getClientRects().length) return false;
       let section = heading.closest('details.page-section');
@@ -165,17 +181,26 @@
       return true;
     };
     const setActiveHeading = () => {
-      const current = headings.filter((heading) => headingIsVisible(heading) && heading.getBoundingClientRect().top <= 120).at(-1);
+      const visibleHeadings = headings.filter(headingIsVisible);
+      const current = visibleHeadings.filter((heading) => heading.getBoundingClientRect().top <= 120).at(-1) ?? visibleHeadings[0];
+      const activeLink = current ? tocLinks.find((link) => link.getAttribute('href') === '#' + current.id) : undefined;
       tocLinks.forEach((link) => {
         const active = current && link.getAttribute('href') === '#' + current.id;
         link.parentElement.classList.toggle('is-active', Boolean(active));
         if (active) link.setAttribute('aria-current', 'location');
         else link.removeAttribute('aria-current');
       });
+      if (activeLink && activeLink.getClientRects().length && activeLink !== lastActiveLink) {
+        keepTocLinkInView(activeLink);
+        lastActiveLink = activeLink;
+      } else if (!activeLink) {
+        lastActiveLink = undefined;
+      }
     };
     window.addEventListener('scroll', setActiveHeading, { passive: true });
     setActiveHeading();
     bindImageLightbox();
+    bindNowImages();
     const tocMobileToggle = document.querySelector('.page-toc-mobile-toggle');
     const tocList = document.getElementById('page-toc-list');
     if (tocMobileToggle && tocList) {
@@ -199,7 +224,11 @@
         sections.forEach((section) => { section.open = open; });
         updateTocToggle();
       });
-      sections.forEach((section) => section.addEventListener('toggle', updateTocToggle));
+      const updateReadingState = () => {
+        updateTocToggle();
+        setActiveHeading();
+      };
+      sections.forEach((section) => section.addEventListener('toggle', updateReadingState));
       updateTocToggle();
     }
     const copyLink = document.querySelector('.page-copy-link');
@@ -240,7 +269,7 @@
     const backToTop = document.querySelector('.back-to-top');
     if (backToTop) {
       const updateBackToTop = () => { backToTop.hidden = window.scrollY < window.innerHeight * 0.8; };
-      backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+      backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: scrollBehavior() }));
       window.addEventListener('scroll', updateBackToTop, { passive: true });
       updateBackToTop();
     }
