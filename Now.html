@@ -25,24 +25,13 @@
   </header>
   <main class="site-main now-page">
     <div class="now-intro"><h1>NOW</h1><p>Notes, stories, images and experiments.<br>Everything is a Page.</p></div>
-    <div class="timeline"><section class="timeline-item short-item">
-      <time>27 AUG 2026 · 19:45</time>
-      <a class="content-button" href="/spacetime/Pages/20260827T194501535/">
-        <h2 class="now-item-title">发布测试用 2</h2>
-        
-        <article class="page-content is-compact"><div><p>发布测试用 2</p>
-</div></article>
-        
-      </a>
-      <div class="item-rule"></div>
-    </section>
-<section class="timeline-item long-item">
+    <div class="timeline"><section class="timeline-item long-item">
       <time>26 AUG 2026 · 22:01</time>
       <a class="content-button" href="/spacetime/Pages/20260826T220122561/">
         
         
-        <article class="page-content is-compact"><div><figure class="page-image"><img src="/spacetime/Pages/20260826T220122561/%E9%9A%90%E5%96%BB%E6%8F%92%E7%94%BB-1.webp" alt="隐喻插画 1"></figure>
-<h1>我不想学编程，我只想创造软件</h1>
+        <article class="page-content is-compact"><div><figure class="page-image"><img class="page-image-target" src="/spacetime/Pages/20260826T220122561/%E9%9A%90%E5%96%BB%E6%8F%92%E7%94%BB-1.webp" alt="隐喻插画 1" tabindex="0" role="button"></figure>
+<h1 id="我不想学编程-我只想创造软件">我不想学编程，我只想创造软件</h1>
 <p>我现在越来越不关心编程了。</p>
 </div></article>
         <span class="read-more">Read full page ↗</span>
@@ -52,14 +41,13 @@
 <section class="timeline-item long-item">
       <time>25 AUG 2026 · 17:18</time>
       <a class="content-button" href="/spacetime/Pages/20260825T171850776/">
-        <h2 class="now-item-title">人AI共生未来</h2>
         
-        <article class="page-content is-compact"><div><figure class="page-image"><img src="/spacetime/Pages/20260825T171850776/%E6%A6%82%E5%BF%B5%E6%8F%92%E7%94%BB.webp" alt="img"></figure>
+        
+        <article class="page-content is-compact"><div><h1 id="人ai共生未来">人AI共生未来</h1>
+<figure class="page-image"><img class="page-image-target" src="/spacetime/Pages/20260825T171850776/%E6%A6%82%E5%BF%B5%E6%8F%92%E7%94%BB.webp" alt="img" tabindex="0" role="button"></figure>
 <p>再过不久 线上都没人了<br>
 人都在线下活动<br>
 线上全是AI 😄</p>
-<p>再过很久 线下也没人了<br>
-线上线下都是人与AI结合体</p>
 </div></article>
         <span class="read-more">Read full page ↗</span>
       </a>
@@ -109,6 +97,156 @@
       }
     } catch {}
   });
+})();
+</script>
+  <script>
+(() => {
+  let lightbox;
+  const closeLightbox = () => {
+    if (!lightbox) return;
+    lightbox.close();
+  };
+  const openLightbox = (image) => {
+    if (!lightbox) {
+      lightbox = document.createElement('dialog');
+      lightbox.className = 'page-image-lightbox';
+      lightbox.innerHTML = '<button type="button" class="page-image-lightbox-close" aria-label="Close image">×</button><img alt="">';
+      lightbox.addEventListener('click', (event) => {
+        if (event.target === lightbox) closeLightbox();
+      });
+      lightbox.querySelector('button').addEventListener('click', closeLightbox);
+      lightbox.addEventListener('cancel', closeLightbox);
+      document.body.append(lightbox);
+    }
+    const preview = lightbox.querySelector('img');
+    preview.src = image.currentSrc || image.src;
+    preview.alt = image.alt;
+    lightbox.showModal();
+    lightbox.querySelector('button').focus();
+  };
+  const bindImageLightbox = () => {
+    document.querySelectorAll('.single-page .page-image-target').forEach((image) => {
+      image.addEventListener('click', () => openLightbox(image));
+      image.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openLightbox(image);
+        }
+      });
+    });
+  };
+  const bindPageReading = () => {
+    const tocLinks = [...document.querySelectorAll('.page-toc a[href^="#"]')];
+    tocLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        const target = document.getElementById(link.getAttribute('href').slice(1));
+        let section = target?.closest('details.page-section');
+        while (section) {
+          section.open = true;
+          section = section.parentElement?.closest('details.page-section') ?? null;
+        }
+        if (target) {
+          window.history.replaceState(null, '', link.getAttribute('href'));
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+    const tocIds = new Set(tocLinks.map((link) => link.getAttribute('href')?.slice(1)).filter(Boolean));
+    const headings = [...document.querySelectorAll('.page-reading-main h1, .page-reading-main h2, .page-reading-main h3, .page-reading-main h4, .page-reading-main h5, .page-reading-main h6')].filter((heading) => tocIds.has(heading.id));
+    const headingIsVisible = (heading) => {
+      if (!heading.getClientRects().length) return false;
+      let section = heading.closest('details.page-section');
+      if (section?.querySelector(':scope > summary')?.contains(heading)) section = section.parentElement?.closest('details.page-section') ?? null;
+      while (section) {
+        if (!section.open) return false;
+        section = section.parentElement?.closest('details.page-section') ?? null;
+      }
+      return true;
+    };
+    const setActiveHeading = () => {
+      const current = headings.filter((heading) => headingIsVisible(heading) && heading.getBoundingClientRect().top <= 120).at(-1);
+      tocLinks.forEach((link) => {
+        const active = current && link.getAttribute('href') === '#' + current.id;
+        link.parentElement.classList.toggle('is-active', Boolean(active));
+        if (active) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+    };
+    window.addEventListener('scroll', setActiveHeading, { passive: true });
+    setActiveHeading();
+    bindImageLightbox();
+    const tocMobileToggle = document.querySelector('.page-toc-mobile-toggle');
+    const tocList = document.getElementById('page-toc-list');
+    if (tocMobileToggle && tocList) {
+      tocMobileToggle.addEventListener('click', () => {
+        const expanded = tocList.hidden;
+        tocList.hidden = !expanded;
+        tocMobileToggle.textContent = expanded ? 'Hide outline' : 'Show outline';
+        tocMobileToggle.setAttribute('aria-expanded', String(expanded));
+      });
+    }
+    const tocToggle = document.querySelector('.page-toc-toggle');
+    const sections = [...document.querySelectorAll('details.page-section')];
+    if (tocToggle && sections.length) {
+      const updateTocToggle = () => {
+        const allOpen = sections.every((section) => section.open);
+        tocToggle.textContent = allOpen ? 'Collapse all' : 'Expand all';
+        tocToggle.setAttribute('aria-label', allOpen ? 'Collapse all sections' : 'Expand all sections');
+      };
+      tocToggle.addEventListener('click', () => {
+        const open = !sections.every((section) => section.open);
+        sections.forEach((section) => { section.open = open; });
+        updateTocToggle();
+      });
+      sections.forEach((section) => section.addEventListener('toggle', updateTocToggle));
+      updateTocToggle();
+    }
+    const copyLink = document.querySelector('.page-copy-link');
+    if (copyLink) {
+      const defaultLabel = copyLink.textContent || '↗';
+      let resetCopyFeedback;
+      const copyPageLink = async () => {
+        let copied = false;
+        if (navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(window.location.href);
+            copied = true;
+          } catch {}
+        }
+        if (!copied) {
+          const helper = document.createElement('textarea');
+          helper.value = window.location.href;
+          helper.setAttribute('readonly', '');
+          helper.style.position = 'fixed';
+          helper.style.opacity = '0';
+          document.body.append(helper);
+          helper.select();
+          try { copied = document.execCommand('copy'); } catch {}
+          helper.remove();
+        }
+        copyLink.textContent = copied ? '✓' : '!';
+        copyLink.setAttribute('aria-label', copied ? 'Link copied' : 'Copy failed');
+        copyLink.setAttribute('title', copied ? 'Link copied' : 'Copy failed');
+        clearTimeout(resetCopyFeedback);
+        resetCopyFeedback = setTimeout(() => {
+          copyLink.textContent = defaultLabel;
+          copyLink.setAttribute('aria-label', 'Copy page link');
+          copyLink.setAttribute('title', 'Copy page link');
+        }, 1600);
+      };
+      copyLink.addEventListener('click', copyPageLink);
+    }
+    const backToTop = document.querySelector('.back-to-top');
+    if (backToTop) {
+      const updateBackToTop = () => { backToTop.hidden = window.scrollY < window.innerHeight * 0.8; };
+      backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+      window.addEventListener('scroll', updateBackToTop, { passive: true });
+      updateBackToTop();
+    }
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindPageReading, { once: true });
+  else bindPageReading();
 })();
 </script>
 </body>
