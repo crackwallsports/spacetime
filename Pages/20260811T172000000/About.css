@@ -1,0 +1,9 @@
+/* About-only presentation. Shared structure and Theme tokens stay global. */
+.special-about { padding-top: 88px; }
+.special-about > .page-content { width: min(var(--page-content-width), 100%); }
+.special-about .page-content h1 { margin-top: 0; }
+.special-about .page-content h2 { margin-top: 48px; }
+
+@media (max-width: 700px) {
+  .special-about { padding-top: 60px; }
+}

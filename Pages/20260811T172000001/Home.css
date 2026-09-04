@@ -1,0 +1,12 @@
+/* Home-only presentation. Shared structure and Theme tokens stay global. */
+.special-home { padding-top: 88px; }
+.special-home > .page-content { width: min(900px, 100%); }
+.special-home .page-content h1 { margin-top: 0; font-size: clamp(64px, 9vw, 112px); }
+.special-home .page-content h1 + p { max-width: 100%; color: var(--muted); font: 20px/1.5 Georgia, serif; }
+.special-home .page-content h2 { margin-top: 64px; }
+.special-home .page-query { margin-top: 24px; }
+
+@media (max-width: 700px) {
+  .special-home { padding-top: 60px; }
+  .special-home .page-content h1 { font-size: clamp(56px, 15vw, 84px); }
+}

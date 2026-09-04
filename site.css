@@ -51,7 +51,8 @@ html::-webkit-scrollbar-corner { background: transparent; }
 .page-content { min-width: 0; font-family: var(--page-body-font); color: var(--ink); font-size: var(--page-font-size); line-height: var(--page-line-height); overflow-wrap: break-word; }
 .page-content h1, .page-content h2, .page-content h3 { max-width: 100%; font-family: var(--page-heading-font); line-height: var(--page-heading-line-height); overflow-wrap: anywhere; }
 .page-content h1 { margin: 16px 0 26px; font-size: var(--page-h1-size); font-weight: 600; letter-spacing: -.045em; }
-.page-content h2 { margin: 56px 0 15px; padding-top: 28px; border-top: 1px solid var(--line); font-size: var(--page-h2-size); font-weight: 600; letter-spacing: -.025em; }
+.page-content h2 { margin: 56px 0 15px; font-size: var(--page-h2-size); font-weight: 600; letter-spacing: -.025em; }
+.page-content--reader h2 { padding-top: 28px; border-top: 1px solid var(--line); }
 .page-content h3 { margin: 34px 0 12px; font-size: var(--page-h3-size); font-weight: 650; letter-spacing: -.015em; }
 .page-content h1, .page-content h2, .page-content h3, .page-content h4, .page-content h5, .page-content h6 { scroll-margin-top: calc(var(--site-header-height, 74px) + 20px); }
 .page-content p { margin: 0 0 var(--page-paragraph-gap); }
@@ -117,6 +118,8 @@ html::-webkit-scrollbar-corner { background: transparent; }
 .page-columns { width: min(920px, calc(100vw - 80px)); margin: 34px 50% 40px; transform: translateX(-50%); columns: 2 260px; column-gap: 42px; }
 .page-columns > *:first-child { margin-top: 0; }
 .page-query { margin: 28px 0; border-top: 1px solid var(--line); }
+.page-query.is-empty { padding: 16px 0; border-bottom: 1px solid var(--line); color: var(--muted); font: 14px/1.5 Georgia, serif; }
+.page-query.is-empty p { margin: 0; }
 .page-query-item { min-height: 54px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 24px; color: inherit; font: 600 14px/1.3 Arial, sans-serif; text-decoration: none; }
 .page-query-item time { color: #929189; font-size: 9px; font-weight: 400; letter-spacing: .08em; }
 .page-query.query-error { padding: 14px; border: 1px solid #dfb6af; background: #fff1ed; color: #8f3328; font: 12px/1.4 Arial, sans-serif; }
@@ -261,6 +264,11 @@ html::-webkit-scrollbar-corner { background: transparent; }
 .archive-controls { position: relative; z-index: 3; display: grid; grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(120px, 160px)); gap: 10px; padding: 28px 0 20px; }
 .archive-controls label { display: grid; gap: 7px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .archive-controls input { width: 100%; min-height: 38px; border: 1px solid var(--line); border-radius: 3px; padding: 0 10px; background: transparent; color: var(--ink); font-size: 12px; letter-spacing: 0; line-height: 1.2; text-transform: none; }
+.archive-search-field { position: relative; }
+.archive-search-field input { padding-right: 58px; }
+.archive-search-field button { position: absolute; top: 50%; right: 8px; min-height: 24px; transform: translateY(-50%); border: 0; padding: 0 4px; background: transparent; color: var(--muted); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; }
+.archive-search-field button:hover, .archive-search-field button:focus-visible { color: var(--orange); }
+.archive-search-field button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .archive-controls input:focus-visible { outline: 0; border-color: color-mix(in srgb, var(--orange) 55%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--orange) 12%, transparent); }
 .archive-filter { min-width: 0; }
 .archive-select { position: relative; min-width: 0; }
@@ -280,6 +288,13 @@ html::-webkit-scrollbar-corner { background: transparent; }
 .archive-select-menu button:focus-visible { background: color-mix(in srgb, var(--orange) 10%, var(--paper)); color: var(--ink); }
 .archive-select-menu button[aria-selected="true"] { background: color-mix(in srgb, var(--orange) 16%, var(--paper)); color: var(--ink); box-shadow: inset 2px 0 var(--orange); }
 .archive-select-menu button:focus-visible { outline: 1px solid color-mix(in srgb, var(--orange) 55%, var(--line)); outline-offset: -1px; }
+.archive-active-filters { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 0 14px; color: var(--muted); font-size: 10px; }
+.archive-active-filter-list { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.archive-active-filters button { border: 0; padding: 3px 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.archive-active-filters button:hover, .archive-active-filters button:focus-visible { color: var(--orange); }
+.archive-active-filters button:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
+.archive-clear-filters { border-bottom: 1px solid currentColor !important; color: var(--ink) !important; letter-spacing: .06em !important; text-transform: uppercase; }
+.archive-clear-filters:hover, .archive-clear-filters:focus-visible { color: var(--orange) !important; }
 .archive-summary { display: flex; justify-content: space-between; gap: 20px; padding: 4px 0 18px; color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
 .archive-summary strong { color: var(--ink); }
 .archive-results { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 18px; }
@@ -287,9 +302,9 @@ html::-webkit-scrollbar-corner { background: transparent; }
 .archive-card a { display: block; color: inherit; text-decoration: none; }
 .archive-card a:focus-visible { outline: 2px solid var(--orange); outline-offset: 6px; }
 .archive-card-media { aspect-ratio: 16 / 9; overflow: hidden; background: var(--panel); }
-.archive-card-media img, .archive-card-placeholder { display: block; width: 100%; height: 100%; object-fit: cover; }
-.archive-card-placeholder { background: color-mix(in srgb, var(--orange) 8%, var(--panel)); }
+.archive-card-media img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .archive-card-body { padding: 15px 0 8px; }
+.archive-card.text-card .archive-card-body { padding-top: 0; }
 .archive-card time { color: var(--muted); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
 .archive-card h2 { margin: 9px 0 7px; font-size: 20px; line-height: 1.1; letter-spacing: -.025em; }
 .archive-card a:hover h2 { color: var(--orange); }
@@ -297,6 +312,12 @@ html::-webkit-scrollbar-corner { background: transparent; }
 .archive-card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 13px; }
 .archive-card-tags span { padding: 4px 6px; border: 1px solid var(--line); color: var(--muted); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
 .archive-empty { padding: 70px 0; color: var(--muted); font: 18px/1.5 Georgia, serif; text-align: center; }
+.archive-empty p { margin: 0 0 18px; }
+.archive-state-action, .archive-empty .archive-clear-filters { border-bottom: 1px solid currentColor; border-inline: 0; border-top: 0; padding: 4px 0; background: transparent; color: var(--ink); font: inherit; font-size: 11px; cursor: pointer; }
+.archive-state-action:hover, .archive-state-action:focus-visible, .archive-empty .archive-clear-filters:hover, .archive-empty .archive-clear-filters:focus-visible { color: var(--orange); }
+.archive-state-action:focus-visible, .archive-empty .archive-clear-filters:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
+.archive-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; padding: 0; border: 0; clip: rect(0 0 0 0); white-space: nowrap; }
+.archive-visually-hidden:focus { position: relative; width: auto; height: auto; margin: 0 0 12px; clip: auto; color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
 .archive-navigation { display: flex; align-items: center; justify-content: center; gap: 8px; padding-top: 42px; }
 .archive-navigation button { min-height: 34px; border: 1px solid var(--line); border-radius: 3px; padding: 0 12px; background: transparent; color: var(--ink); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
 .archive-navigation button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
