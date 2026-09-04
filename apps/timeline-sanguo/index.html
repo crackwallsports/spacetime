@@ -1,0 +1,2452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>历史演化时间线 (Timeline Explorer V6.0) - 三国赤壁测试集</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            /*height: 100vh;*/
+            background-color: #0f172a;
+            color: #f8fafc;
+            /* overflow: hidden;*/
+        }
+        #app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Left Scrollable Timeline Pane */
+        #timeline-area {
+            flex: 2;
+            height: 100%;
+            overflow-y: auto;
+            padding: 40px;
+            box-sizing: border-box;
+            position: relative;
+            background-color: #0b0f19;
+            scrollbar-width: thin;
+            scrollbar-color: #334155 #0f172a;
+        }
+        
+        /* The central vertical backbone line */
+        #timeline-area::before {
+            content: '';
+            position: absolute;
+            top: 0px;
+            bottom: 0px;
+            left: 50px;
+            width: 4px;
+            background: linear-gradient(180deg, #3b82f6 0%, #10b981 50%, #f59e0b 100%);
+            border-radius: 2px;
+            z-index: 1;
+        }
+
+        /* Right Sticky Details Sidebar Drawer */
+        #sidebar-area {
+            flex: 1;
+            min-width: 450px;
+            max-width: 550px;
+            height: 100vh;
+            overflow-y: auto;
+            background-color: #1e293b;
+            border-left: 1px solid #334155;
+            box-sizing: border-box;
+            padding: 24px;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Timeline Items styling */
+        .timeline-item {
+            position: relative;
+            margin-bottom: 48px;
+            padding-left: 50px;
+            z-index: 2;
+        }
+        
+        /* Anchor dots */
+        .timeline-dot {
+            position: absolute;
+            left: -3px; /* Centers on the 55px vertical line */
+            top: 10px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #1e293b;
+            border: 4px solid #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .timeline-item.selected .timeline-dot {
+            transform: scale(1.3);
+            background-color: #3b82f6;
+            border-color: #60a5fa;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+        }
+        
+        /* Cards */
+        .timeline-card {
+            background-color: #1a2333;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .timeline-card:hover {
+            border-color: #475569;
+            transform: translateY(-2px);
+            background-color: #1f293d;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        .timeline-item.selected .timeline-card {
+            border-color: #3b82f6;
+            background-color: #1e293b;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .card-tag {
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+        .tag-snapshot { background-color: #1e3a8a; color: #93c5fd; }
+        .tag-transition { background-color: #5c1d1d; color: #fca5a5; }
+        .tag-decision { background-color: #78350f; color: #fcd34d; }
+        
+        .card-title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #f8fafc;
+        }
+        .card-date {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        .card-desc {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #cbd5e1;
+            margin-top: 8px;
+            margin-bottom: 0;
+        }
+        
+        /* Transition Conduits (Collapsible cards) */
+        .conduit-card {
+            background-color: #161c28;
+            border: 1px dashed #475569;
+        }
+        .conduit-dot {
+            border-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+        .timeline-item.selected .conduit-dot {
+            background-color: #ef4444;
+            border-color: #fca5a5;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+        }
+        
+        /* Accordion Collapsible Area */
+        .accordion-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 8px 14px;
+            font-size: 12.5px;
+            font-weight: bold;
+            color: #fca5a5;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: all 0.2s;
+            width: fit-content;
+        }
+        .accordion-btn:hover {
+            background-color: #334155;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 0;
+        }
+        .accordion-content.expanded {
+            max-height: 500px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #334155;
+        }
+        
+        /* Decision splits */
+        .decision-dot {
+            border-color: #f59e0b;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+        }
+        .timeline-item.selected .decision-dot {
+            background-color: #f59e0b;
+            border-color: #fcd34d;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.8);
+        }
+        .decision-fork-container {
+            display: flex;
+            gap: 16px;
+            margin-top: 14px;
+            width: 100%;
+        }
+        .fork-option-card {
+            flex: 1;
+            background-color: #111827;
+            border-radius: 8px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .fork-option-card.selected-path {
+            border: 1.5px solid #10b981;
+            background-color: #064e3b;
+        }
+        .fork-option-card.selected-path::before {
+            content: '已选方案 (Actual)';
+            position: absolute;
+            top: -10px;
+            right: 12px;
+            background-color: #10b981;
+            color: #064e3b;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .fork-option-card.unselected-path {
+            border: 1.5px dashed #64748b;
+            opacity: 0.8;
+        }
+        .fork-option-card.unselected-path::before {
+            content: '未选方案 (What-If)';
+            position: absolute;
+            top: -10px;
+            right: 12px;
+            background-color: #64748b;
+            color: #0f172a;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .fork-option-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        .option-title {
+            font-weight: bold;
+            font-size: 14px;
+            color: #f8fafc;
+            margin-bottom: 4px;
+        }
+        .option-desc {
+            font-size: 12px;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+
+        /* Sidebar styles */
+        .welcome-msg {
+            margin: auto;
+            /*text-align: center;*/
+            color: #94a3b8;
+            font-size: 15px;
+        }
+        .welcome-msg h3 {
+            color: #cbd5e1;
+            margin-bottom: 8px;
+        }
+        
+        .header {
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        .header h2 {
+            margin: 0;
+            color: #60a5fa;
+            font-size: 20px;
+        }
+        .header .subtitle {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        
+        .faction-box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .faction-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #3b82f6;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .faction-meta {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+        .section-sub-title {
+            font-size: 13.5px;
+            font-weight: bold;
+            color: #e2e8f0;
+            margin-top: 10px;
+            margin-bottom: 6px;
+            border-left: 3px solid #3b82f6;
+            padding-left: 8px;
+        }
+        ul {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+        li {
+            margin-bottom: 4px;
+        }
+        
+        /* Metadata Tags */
+        .meta-tag {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 6px;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .tag-fact { background-color: #064e3b; color: #a7f3d0; }
+        .tag-account { background-color: #1e3a8a; color: #bfdbfe; }
+        .tag-inference { background-color: #78350f; color: #fde68a; }
+        .tag-interpretation { background-color: #374151; color: #e5e7eb; }
+        
+        /* Quick Jump bar */
+        #quick-jump {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(30, 41, 59, 0.9);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            font-size: 12px;
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+        #quick-jump select {
+            background-color: #0f172a;
+            color: #cbd5e1;
+            border: 1px solid #475569;
+            padding: 4px 8px;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* V6 design system and interaction polish */
+        :root {
+            --bg-app: #090d15;
+            --bg-timeline: #0d131d;
+            --bg-panel: #141c28;
+            --bg-card: #182230;
+            --bg-card-hover: #1d2a3b;
+            --text-primary: #edf2f7;
+            --text-secondary: #a7b3c2;
+            --text-muted: #718096;
+            --line: #3b4655;
+            --line-soft: rgba(148, 163, 184, .16);
+            --state: #75a8e8;
+            --transition: #e17878;
+            --decision: #e6b45c;
+            --actual: #79c6a0;
+        }
+
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body { background: var(--bg-app); color: var(--text-primary); }
+        #app-container { width: 100%; height: 100vh; min-height: 0; overflow: hidden; }
+        #timeline-area, #sidebar-area {
+            min-height: 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(148,163,184,.42) transparent;
+        }
+        #timeline-area {
+            flex: 1 1 auto;
+            height: 100vh;
+            overflow-y: auto;
+            background: var(--bg-timeline);
+            padding: 28px 36px 40px;
+        }
+        #sidebar-area {
+            flex: 0 0 560px;
+            min-width: 380px;
+            max-width: 760px;
+            height: 100vh;
+            overflow-y: auto;
+            background: var(--bg-panel);
+            border-left-color: var(--line-soft);
+            padding: 0 24px 28px;
+        }
+        #pane-divider {
+            flex: 0 0 10px;
+            height: 100vh;
+            position: relative;
+            z-index: 30;
+            cursor: col-resize;
+            background: transparent;
+            touch-action: none;
+        }
+        #pane-divider::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 4px;
+            width: 1px;
+            background: var(--line-soft);
+            transition: background .15s ease, width .15s ease, left .15s ease;
+        }
+        #pane-divider:hover::before, body.is-resizing #pane-divider::before {
+            left: 2px;
+            width: 5px;
+            background: var(--state);
+            box-shadow: 0 0 12px rgba(117,168,232,.35);
+        }
+        body.is-resizing { cursor: col-resize; user-select: none; }
+        #timeline-area::-webkit-scrollbar, #sidebar-area::-webkit-scrollbar { width: 8px; height: 8px; }
+        #timeline-area::-webkit-scrollbar-track, #sidebar-area::-webkit-scrollbar-track { background: transparent; }
+        #timeline-area::-webkit-scrollbar-thumb, #sidebar-area::-webkit-scrollbar-thumb {
+            background: rgba(148,163,184,.34); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box;
+        }
+        #timeline-area::-webkit-scrollbar-thumb:hover, #sidebar-area::-webkit-scrollbar-thumb:hover {
+            background: rgba(203,213,225,.56); border: 2px solid transparent; background-clip: padding-box;
+        }
+        #timeline-content { position: relative; min-height: 100%; }
+        #timeline-area::before { display: none; }
+        #timeline-content::before {
+            content: ''; position: absolute; top: 10px; bottom: 12px; left: 10px; width: 3px;
+            background: var(--line); border-radius: 99px; z-index: 1;
+        }
+        .timeline-item { margin-bottom: 30px; padding-left: 42px; }
+        .timeline-item:last-child { margin-bottom: 0; }
+        .timeline-card { background: var(--bg-card); border-color: var(--line-soft); border-radius: 10px; padding: 16px 18px; box-shadow: 0 5px 14px rgba(0,0,0,.14); }
+        .timeline-card:hover { background: var(--bg-card-hover); border-color: rgba(148,163,184,.35); }
+        .timeline-dot { left: 0; top: 10px; width: 18px; height: 18px; border-width: 3px; background: var(--bg-timeline); box-shadow: none; }
+        .timeline-item.selected .timeline-dot { box-shadow: 0 0 0 4px rgba(117,168,232,.14); }
+        .card-title { font-size: 17px; }
+        .card-date { color: var(--text-muted); font-size: 12px; }
+        .card-desc { color: var(--text-secondary); font-size: 13.5px; line-height: 1.55; }
+        .card-tag { opacity: .72; font-size: 10px; padding: 2px 7px; letter-spacing: .04em; }
+        .tag-snapshot { background: rgba(80,130,190,.22); color: #a9c9ed; }
+        .tag-transition { background: rgba(190,70,70,.18); color: #efa0a0; }
+        .tag-decision { background: rgba(190,130,45,.18); color: #eaca87; }
+        .conduit-card { background: transparent; border: 0; border-left: 2px dashed rgba(225,120,120,.52); border-radius: 0; padding: 10px 14px; box-shadow: none; }
+        .conduit-card:hover { background: rgba(225,120,120,.055); border-color: var(--transition); box-shadow: none; transform: none; }
+        .conduit-dot { border-color: var(--transition); background: var(--bg-timeline); }
+        .decision-fork-container { gap: 12px; margin-top: 12px; }
+        .fork-option-card { padding: 11px 12px; border-radius: 8px; }
+        .fork-option-card.selected-path { border-color: rgba(121,198,160,.72); background: rgba(46,115,82,.18); }
+        .fork-option-card.unselected-path { border-color: rgba(148,163,184,.35); background: rgba(15,23,42,.34); }
+        .fork-option-card::before { opacity: .72; }
+        .decision-dot { border-radius: 3px; transform: rotate(45deg); border-color: var(--decision); background: var(--bg-timeline); }
+        .timeline-item.selected .decision-dot { transform: rotate(45deg) scale(1.16); }
+        .decision-fork-container::before { content: '分叉'; align-self: center; color: var(--decision); font-size: 10px; writing-mode: vertical-rl; letter-spacing: .12em; opacity: .8; }
+        .accordion-btn { background: rgba(225,120,120,.08); border-color: rgba(225,120,120,.25); color: #efa0a0; padding: 6px 10px; margin-top: 10px; }
+        .meta-tag { background: transparent !important; border: 1px solid currentColor; opacity: .62; font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 999px; letter-spacing: .02em; }
+        .meta-tag:hover { opacity: 1; }
+        .tag-fact { color: #8fd0af; } .tag-account { color: #9bbce3; } .tag-inference { color: #e4c582; } .tag-interpretation { color: #abb5c2; }
+        .cognition-label { display: inline-block; min-width: 72px; margin-right: 6px; color: var(--text-muted); font-size: 11px; font-style: normal; }
+        .sidebar-header { position: sticky; top: 0; z-index: 20; padding: 22px 0 12px; background: rgba(20,28,40,.94); backdrop-filter: blur(14px); }
+        .header { position: sticky; top: 0; z-index: 10; background: rgba(20,28,40,.94); backdrop-filter: blur(14px); border-bottom-width: 1px; padding: 22px 0 12px; margin-bottom: 14px; }
+        .header h2 { color: var(--text-primary); font-size: 19px; }
+        .header .subtitle { color: var(--text-muted); }
+        .faction-box { background: rgba(24,34,48,.74); border-color: var(--line-soft); padding: 13px; margin-bottom: 12px; }
+        .faction-title { color: var(--text-primary); font-size: 15px; }
+        .faction-meta { color: var(--text-muted); margin-bottom: 8px; }
+        .section-sub-title { color: var(--text-secondary); border-left-color: #667384; margin-top: 9px; margin-bottom: 5px; }
+        ul { color: var(--text-secondary); line-height: 1.45; } li { margin-bottom: 3px; }
+        #quick-jump { position: sticky; top: 4px; right: auto; margin: 0 0 16px auto; width: fit-content; padding: 7px 9px; gap: 9px; background: rgba(20,28,40,.9); border-color: var(--line-soft); border-radius: 9px; }
+        #quick-jump span { color: var(--text-muted); }
+        #quick-jump select { background: #111925; border-color: var(--line-soft); color: var(--text-secondary); }
+        .mini-nav { display: flex; align-items: center; gap: 5px; margin-top: 8px; padding: 7px 0 0; border-top: 1px solid var(--line-soft); }
+        .mini-nav-track { display: flex; align-items: center; flex: 1; gap: 3px; }
+        .mini-nav-track::before { content: ''; height: 1px; background: var(--line); flex: 1; order: 2; }
+        .mini-nav button { border: 1px solid var(--line-soft); background: #111925; color: var(--text-muted); border-radius: 5px; font: 600 10px/1.8 inherit; padding: 0 5px; cursor: pointer; }
+        .mini-nav button:hover, .mini-nav button.active { color: var(--text-primary); border-color: var(--state); background: rgba(117,168,232,.16); }
+        .faction-tabs { display: flex; gap: 5px; margin: 0 0 12px; padding-bottom: 9px; border-bottom: 1px solid var(--line-soft); }
+        .faction-tabs button, .diff-toggle { border: 1px solid var(--line-soft); background: transparent; color: var(--text-muted); border-radius: 6px; padding: 6px 8px; cursor: pointer; font: 600 11px inherit; }
+        .faction-tabs button.active, .faction-tabs button:hover, .diff-toggle:hover { color: var(--text-primary); border-color: var(--state); background: rgba(117,168,232,.13); }
+        .state-diff { margin: 0 0 14px; padding: 12px; border: 1px solid rgba(117,168,232,.3); border-radius: 8px; background: rgba(117,168,232,.07); }
+        .state-diff h4 { margin: 0 0 10px; color: var(--state); font-size: 12px; }
+        .diff-faction { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line-soft); }
+        .diff-faction:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
+        .diff-faction h5 { margin: 0 0 6px; color: var(--text-primary); font-size: 12px; }
+        .diff-labels, .diff-row { display: grid; grid-template-columns: 68px minmax(0, 1fr) 18px minmax(0, 1fr); gap: 6px; align-items: start; }
+        .diff-labels { color: var(--text-muted); font-size: 10px; padding: 0 7px 4px; }
+        .diff-row { padding: 7px; margin-top: 4px; border: 1px solid rgba(148,163,184,.1); border-radius: 6px; background: rgba(9,13,21,.24); color: var(--text-secondary); font-size: 11px; line-height: 1.42; }
+        .diff-key { color: var(--text-primary); font-weight: 600; }
+        .diff-before { color: #b7a7a7; }
+        .diff-after { color: #a8d5bd; }
+        .diff-arrow { color: var(--state); text-align: center; padding-top: 1px; }
+        .state-diff > p { margin: 5px 0; color: var(--text-secondary); font-size: 12px; line-height: 1.45; }
+        @media (max-width: 1100px) { #sidebar-area { flex-basis: 430px; } #timeline-area { padding-left: 24px; padding-right: 24px; } }
+        @media (max-width: 900px) { #app-container { display: block; overflow: auto; } body { overflow: auto; } #timeline-area, #sidebar-area { height: auto; min-height: 100vh; } #sidebar-area { border-left: 0; border-top: 1px solid var(--line-soft); } #pane-divider { display: none; } }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <!-- Left Scrollable Timeline Pane -->
+    <div id="timeline-area">
+        
+        <!-- Quick Jump selector -->
+        <div id="quick-jump">
+            <span>快速跳转: </span>
+            <select id="jump-select" onchange="jumpToNode(this.value)">
+                <option value="">-- 选择时间阶段 --</option>
+                <option value="S0">S0: 曹操南征前 (208.07)</option>
+                <option value="S1">S1: 荆州易主 (208.08-09)</option>
+                <option value="S2">S2: 当阳惨败 (208.09末)</option>
+                <option value="S3">S3: 孙刘结盟 (208.10)</option>
+                <option value="S4">S4: 赤壁对峙 (208.11-12)</option>
+                <option value="S5">S5: 赤壁大捷 (208.12中)</option>
+                <option value="S6">S6: 南郡相持 (209)</option>
+                <option value="S7">S7: 刘备爆涨 (209末-210)</option>
+                <option value="S8">S8: 三分天下 (210-211)</option>
+            </select>
+        </div>
+
+        <!-- TIMELINE ITEMS GO HERE -->
+        <div id="timeline-content">
+        
+        <!-- S0 -->
+        <div class="timeline-item" id="item-S0">
+            <div class="timeline-dot" onclick="selectNode('S0')"></div>
+            <div class="timeline-card" onclick="selectNode('S0')">
+                <div class="card-header">
+                    <h3 class="card-title">S0: 曹操南征前的世界状态</h3>
+                    <span class="card-tag tag-snapshot">Snapshot</span>
+                </div>
+                <div class="card-date">时间：208年7月 (建安十三年七月)</div>
+                <p class="card-desc">初始世界状态：曹操整训完毕准备南下，刘表病重，荆州继承危机爆发在即，刘备依附新野，江东孙权静观其变。</p>
+            </div>
+        </div>
+
+        
+        <!-- T0_1 -->
+        <div class="timeline-item" id="item-T0_1">
+            <div class="timeline-dot conduit-dot" onclick="selectNode('T0_1')"></div>
+            <div class="timeline-card conduit-card" onclick="selectNode('T0_1')">
+                <div class="card-header">
+                    <h3 class="card-title">S0 → S1: 系统失稳与压力释放</h3>
+                    <span class="card-tag tag-transition">Transition</span>
+                </div>
+                <div class="card-date">时间：208年7月 - 8月</div>
+                <p class="card-desc">驱动力：刘表病逝，荆州权力真空；曹大军南下，防线崩溃。</p>
+                <div class="accordion-btn" onclick="toggleConduit('T0_1', event)">⚙️ 展开演化细节与驱动力</div>
+                <div class="accordion-content" id="conduit-content-T0_1">
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #ef4444;">触发驱动力 (Trigger Drivers):</div>
+                    <ul style="margin-bottom: 8px;">
+                        <li><b>刘表去世 (D_Liu_Biao_Death)</b>: 荆州牧刘表病逝，引发权力继承真空 [Fact]</li>
+                        <li><b>曹操南征 (D_Cao_Cao_Advance)</b>: 曹操南征大军越过边界，长驱直入，带来极限军事压迫 [Fact]</li>
+                    </ul>
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #60a5fa;">结构性冲击 (Structural Impact):</div>
+                    <ul>
+                        <li>刘表死后，蔡瑁等拥立次子刘琮继位，排挤长子刘琦，荆州防御体系崩溃 [Fact]</li>
+                        <li>刘备客军丧失政治互信与后勤，瞬间暴露于曹操兵锋之下 [Inference]</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- S1 -->
+        <div class="timeline-item" id="item-S1">
+            <div class="timeline-dot" onclick="selectNode('S1')"></div>
+            <div class="timeline-card" onclick="selectNode('S1')">
+                <div class="card-header">
+                    <h3 class="card-title">S1: 荆州易主与大军压境</h3>
+                    <span class="card-tag tag-snapshot">Snapshot</span>
+                </div>
+                <div class="card-date">时间：208年8月 - 9月上旬</div>
+                <p class="card-desc">刘表去世后，刘琮继位。曹操大军压境，新野、襄阳危在旦夕。刘备集团因信息被封锁，处于极其被动的状态。</p>
+            </div>
+        </div>
+        
+        <!-- DEC_LC -->
+        <div class="timeline-item" id="item-DEC_LC">
+            <div class="timeline-dot decision-dot" onclick="selectNode('DEC_LC')"></div>
+            <div class="timeline-card" onclick="selectNode('DEC_LC')">
+                <div class="card-header">
+                    <h3 class="card-title">决策: 刘琮投降抉择</h3>
+                    <span class="card-tag tag-decision">Decision</span>
+                </div>
+                <div class="card-date">时间：208年9月</div>
+                <p class="card-desc">曹军大举抵达宛城，刘琮面临内部蔡氏世家大族联合劝降、以及外部军事毁灭威胁的双重绝局。</p>
+                
+                <!-- Split track container -->
+                <div class="decision-fork-container">
+                    <div class="fork-option-card selected-path" onclick="selectNode('OPT_SURR', event)">
+                        <div class="option-title">已选：举州降曹</div>
+                        <div class="option-desc">不费一兵一卒举州降曹。实际结局：刘琮被明升暗降并软禁，蔡瑁等功臣获封侯。</div>
+                    </div>
+                    <div class="fork-option-card unselected-path" onclick="selectNode('OPT_RESIST', event)">
+                        <div class="option-title">未选：联刘御曹</div>
+                        <div class="option-desc">联合樊城的刘备死战。意图结局：依托天险阻挡曹操。实际可能：荆州陷入战火或被刘备喧宾夺主。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- T1_2 -->
+        <div class="timeline-item" id="item-T1_2">
+            <div class="timeline-dot conduit-dot" onclick="selectNode('T1_2')"></div>
+            <div class="timeline-card conduit-card" onclick="selectNode('T1_2')">
+                <div class="card-header">
+                    <h3 class="card-title">S1 → S2: 连锁崩溃与当阳追击</h3>
+                    <span class="card-tag tag-transition">Transition</span>
+                </div>
+                <div class="card-date">时间：208年9月中旬</div>
+                <p class="card-desc">驱动力：刘琮正式降曹，江防瓦解；刘备仓皇撤走，曹军虎豹骑极速追杀。</p>
+                <div class="accordion-btn" onclick="toggleConduit('T1_2', event)">⚙️ 展开演化细节与驱动力</div>
+                <div class="accordion-content" id="conduit-content-T1_2">
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #ef4444;">触发驱动力 (Trigger Drivers):</div>
+                    <ul style="margin-bottom: 8px;">
+                        <li><b>刘琮降曹执行 (D_Liu_Cong_Surrender_Executed)</b>: 刘琮开城归顺，导致襄阳及汉水防线不战而散 [Fact]</li>
+                        <li><b>刘备滞后知悉 (D_Liu_Bei_Late_Discovery)</b>: 刘备在樊城很晚才知刘琮已降，陷于腹背受敌的极危死局 [Fact]</li>
+                    </ul>
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #60a5fa;">结构性冲击 (Structural Impact):</div>
+                    <ul>
+                        <li>刘备被迫携带十万不愿降曹的百姓撤退，行军极为迟缓 [Fact]</li>
+                        <li>曹操唯恐刘备占领江陵获得军资，派虎豹骑一日一夜疾驰三百余里实施长坂追截 [Fact]</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- S2 -->
+        <div class="timeline-item" id="item-S2">
+            <div class="timeline-dot" onclick="selectNode('S2')"></div>
+            <div class="timeline-card" onclick="selectNode('S2')">
+                <div class="card-header">
+                    <h3 class="card-title">S2: 当阳惨败与江陵易手</h3>
+                    <span class="card-tag tag-snapshot">Snapshot</span>
+                </div>
+                <div class="card-date">时间：208年9月中旬 - 下旬</div>
+                <p class="card-desc">长坂坡之战爆发，刘备残部精锐全军覆没，仓皇退守夏口；曹操兵不血刃接收江陵大批军粮战船；江东孙权集团面对曹操顺流而下的极限威压，文臣武将陷入激烈撕裂。</p>
+            </div>
+        </div>
+        
+        <!-- T2_3 -->
+        <div class="timeline-item" id="item-T2_3">
+            <div class="timeline-dot conduit-dot" onclick="selectNode('T2_3')"></div>
+            <div class="timeline-card conduit-card" onclick="selectNode('T2_3')">
+                <div class="card-header">
+                    <h3 class="card-title">S2 → S3: 舌战群儒与结盟建立</h3>
+                    <span class="card-tag tag-transition">Transition</span>
+                </div>
+                <div class="card-date">时间：208年10月</div>
+                <p class="card-desc">驱动力：诸葛亮亲赴江东舌战群儒；鲁肃夏口奔走外交；周瑜被紧急召回柴桑论证抗曹策略。</p>
+                <div class="accordion-btn" onclick="toggleConduit('T2_3', event)">⚙️ 展开演化细节与驱动力</div>
+                <div class="accordion-content" id="conduit-content-T2_3">
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #ef4444;">触发驱动力 (Trigger Drivers):</div>
+                    <ul style="margin-bottom: 8px;">
+                        <li><b>诸葛亮柴桑游说 (D_Zhuge_Liang_Diplomacy)</b>: 特使诸葛亮舌战江东文臣，精辟分析曹操兵家之忌与两家协同作战的利益空间 [Fact]</li>
+                        <li><b>召回周瑜决策 (D_Zhou_Yu_Recall)</b>: 鲁肃极力劝阻迎曹，孙权召回鄱阳训练水军的周瑜，稳定主战信心 [Fact]</li>
+                    </ul>
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #60a5fa;">结构性冲击 (Structural Impact):</div>
+                    <ul>
+                        <li>孙权拔刀砍案，宣告江东全力转入战时动员，压制投降言论 [Fact]</li>
+                        <li>刘备在夏口、樊口获得最重要的战略喘息机会与同盟保护 [Inference]</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- S3 -->
+        <div class="timeline-item" id="item-S3">
+            <div class="timeline-dot" onclick="selectNode('S3')"></div>
+            <div class="timeline-card" onclick="selectNode('S3')">
+                <div class="card-header">
+                    <h3 class="card-title">S3: 孙刘同盟建立</h3>
+                    <span class="card-tag tag-snapshot">Snapshot</span>
+                </div>
+                <div class="card-date">时间：208年10月</div>
+                <p class="card-desc">孙刘大联盟正式缔结。孙权任命周瑜、程普为左右都督，率江东三万精锐水军西进抗曹；刘备残兵协同驻防，依托长江、汉水天险，共同构筑军事防线。</p>
+            </div>
+        </div>
+        
+        <!-- DEC_SQ -->
+        <div class="timeline-item" id="item-DEC_SQ">
+            <div class="timeline-dot decision-dot" onclick="selectNode('DEC_SQ')"></div>
+            <div class="timeline-card" onclick="selectNode('DEC_SQ')">
+                <div class="card-header">
+                    <h3 class="card-title">决策: 孙权生死抉择</h3>
+                    <span class="card-tag tag-decision">Decision</span>
+                </div>
+                <div class="card-date">时间：208年10月</div>
+                <p class="card-desc">曹操送达“会猎吴地”的逼降恐吓信，江东大震，张昭等主臣极力主和，刘备特使诸葛亮与周瑜、鲁肃对其进行最后的游说博弈。</p>
+                
+                <!-- Split track container -->
+                <div class="decision-fork-container">
+                    <div class="fork-option-card selected-path" onclick="selectNode('OPT_RESIST_EAST', event)">
+                        <div class="option-title">已选：联刘决战</div>
+                        <div class="option-desc">拔刀断案，主战迎击曹操。实际结局：赤壁用火攻大败曹军，保全江东独立并锁定三分天下。</div>
+                    </div>
+                    <div class="fork-option-card unselected-path" onclick="selectNode('OPT_SURR_EAST', event)">
+                        <div class="option-title">未选：投降迎曹</div>
+                        <div class="option-desc">顺应张昭等劝降，解除江防。意图结局：保全江东宗庙性命。实际可能：孙氏降为俘虏软禁，世家获得保全。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- T3_4 -->
+        <div class="timeline-item" id="item-T3_4">
+            <div class="timeline-dot conduit-dot" onclick="selectNode('T3_4')"></div>
+            <div class="timeline-card conduit-card" onclick="selectNode('T3_4')">
+                <div class="card-header">
+                    <h3 class="card-title">S3 → S4: 初战退守与连环锁船</h3>
+                    <span class="card-tag tag-transition">Transition</span>
+                </div>
+                <div class="card-date">时间：208年11月</div>
+                <p class="card-desc">驱动力：赤壁遭遇战曹军首战失利退乌林；曹操下令连环战船以解决水土不服与风浪颠簸。</p>
+                <div class="accordion-btn" onclick="toggleConduit('T3_4', event)">⚙️ 展开演化细节与驱动力</div>
+                <div class="accordion-content" id="conduit-content-T3_4">
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #ef4444;">触发驱动力 (Trigger Drivers):</div>
+                    <ul style="margin-bottom: 8px;">
+                        <li><b>赤壁初遭遇 (D_First_Clash_Chibi)</b>: 联军与曹操水军前锋在赤壁遭遇，曹军大病不习水战，初战失利退驻乌林 [Fact]</li>
+                        <li><b>连环锁船决策 (D_Cao_Cao_Chaining_Ships)</b>: 曹操为克服北方兵晕船，下令将千艘战船首尾相连停泊 [Fact]</li>
+                    </ul>
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #60a5fa;">结构性冲击 (Structural Impact):</div>
+                    <ul>
+                        <li>两军进入隔江长时期对垒。连环船提供了致命的单一火攻破绽 [Inference]</li>
+                        <li>曹大军由于营内严重爆发的疫病，非战斗减员极其严重，战斗力空前滑坡 [Fact]</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- S4 -->
+        <div class="timeline-item" id="item-S4">
+            <div class="timeline-dot" onclick="selectNode('S4')"></div>
+            <div class="timeline-card" onclick="selectNode('S4')">
+                <div class="card-header">
+                    <h3 class="card-title">S4: 赤壁对峙与战前态势</h3>
+                    <span class="card-tag tag-snapshot">Snapshot</span>
+                </div>
+                <div class="card-date">时间：208年11月 - 12月</div>
+                <p class="card-desc">隔江对峙达到巅峰。曹操连环船成为巨大破绽，周瑜、黄盖密谋执行诈降放火之策，东南风起决战一触即发。</p>
+            </div>
+        </div>
+        
+        <!-- T4_5 -->
+        <div class="timeline-item" id="item-T4_5">
+            <div class="timeline-dot conduit-dot" onclick="selectNode('T4_5')"></div>
+            <div class="timeline-card conduit-card" onclick="selectNode('T4_5')">
+                <div class="card-header">
+                    <h3 class="card-title">S4 → S5: 东南风起与赤壁大劫</h3>
+                    <span class="card-tag tag-transition">Transition</span>
+                </div>
+                <div class="card-date">时间：208年12月中旬</div>
+                <p class="card-desc">驱动力：反常东南风突起，黄盖率火船冲撞曹操连环战船；大火借风蔓延引爆江北连营。</p>
+                <div class="accordion-btn" onclick="toggleConduit('T4_5', event)">⚙️ 展开演化细节与驱动力</div>
+                <div class="accordion-content" id="conduit-content-T4_5">
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #ef4444;">触发驱动力 (Trigger Drivers):</div>
+                    <ul style="margin-bottom: 8px;">
+                        <li><b>黄盖诈降纵火 (D_Huang_Gai_Fire_Attack)</b>: 黄盖十艘轻捷战船满载枯柴膏油诈降，接近时顺风扬帆突袭，大火冲天 [Fact]</li>
+                        <li><b>冬季东南风起 (D_Southeast_Wind_Occurrence)</b>: 气候出现反常东南风，推波助澜，火势瞬间吞噬江北曹军主力战船及陆军旱营 [Fact]</li>
+                    </ul>
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #60a5fa;">结构性冲击 (Structural Impact):</div>
+                    <ul>
+                        <li>曹军引以为傲的水军彻底崩溃，曹大军彻底败走北撤 [Fact]</li>
+                        <li>刘备、周瑜主力水陆大军乘势渡江追击，扫荡残敌 [Fact]</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- S5 -->
+        <div class="timeline-item" id="item-S5">
+            <div class="timeline-dot" onclick="selectNode('S5')"></div>
+            <div class="timeline-card" onclick="selectNode('S5')">
+                <div class="card-header">
+                    <h3 class="card-title">S5: 赤壁大捷与曹军北撤</h3>
+                    <span class="card-tag tag-snapshot">Snapshot</span>
+                </div>
+                <div class="card-date">时间：208年12月中旬 - 下旬</div>
+                <p class="card-desc">赤壁火攻告捷。曹操残军在大风、大雪、大面积疫病肆虐下败走华容道，死伤无数；曹操被迫留曹仁、徐晃守江陵，自己带残兵还邺，放弃短期统一全国的尝试。</p>
+            </div>
+        </div>
+        
+        <!-- T5_6 -->
+        <div class="timeline-item" id="item-T5_6">
+            <div class="timeline-dot conduit-dot" onclick="selectNode('T5_6')"></div>
+            <div class="timeline-card conduit-card" onclick="selectNode('T5_6')">
+                <div class="card-header">
+                    <h3 class="card-title">S5 → S6: 焦土攻坚与南郡对峙</h3>
+                    <span class="card-tag tag-transition">Transition</span>
+                </div>
+                <div class="card-date">时间：208年12月 - 209年</div>
+                <p class="card-desc">驱动力：周瑜统领江东主力跨江围攻江陵；曹操留守守将曹仁展开焦土守城战。</p>
+                <div class="accordion-btn" onclick="toggleConduit('T5_6', event)">⚙️ 展开演化细节与驱动力</div>
+                <div class="accordion-content" id="conduit-content-T5_6">
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #ef4444;">触发驱动力 (Trigger Drivers):</div>
+                    <ul style="margin-bottom: 8px;">
+                        <li><b>周瑜围攻江陵 (D_Zhou_Yu_Attack_Jiangling)</b>: 周瑜率孙吴绝对精锐，渡江发动惨烈持久的江陵夺城战 [Fact]</li>
+                        <li><b>曹仁死守焦土 (D_Cao_Ren_Rigid_Defense)</b>: 曹仁以极强战术意志守城，对江东形成极其惨重的物理消耗 [Fact]</li>
+                    </ul>
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #60a5fa;">结构性冲击 (Structural Impact):</div>
+                    <ul>
+                        <li>曹操、江东主力被深困南郡泥潭，造成荆州中南部大空隙 [Inference]</li>
+                        <li>刘备获得惊天安全时空，得以实行“避实击虚”的自主战略 [Inference]</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- S6 -->
+        <div class="timeline-item" id="item-S6">
+            <div class="timeline-dot" onclick="selectNode('S6')"></div>
+            <div class="timeline-card" onclick="selectNode('S6')">
+                <div class="card-header">
+                    <h3 class="card-title">S6: 南郡僵局与力量真空</h3>
+                    <span class="card-tag tag-snapshot">Snapshot</span>
+                </div>
+                <div class="card-date">时间：209年整年</div>
+                <p class="card-desc">江陵（南郡）处于漫长一年的攻坚消耗中。曹仁、周瑜拼死相搏；刘备在此战略真空期暗中谋划夺取毫无防守的荆州南部各郡。</p>
+            </div>
+        </div>
+        
+        <!-- T6_7 -->
+        <div class="timeline-item" id="item-T6_7">
+            <div class="timeline-dot conduit-dot" onclick="selectNode('T6_7')"></div>
+            <div class="timeline-card conduit-card" onclick="selectNode('T6_7')">
+                <div class="card-header">
+                    <h3 class="card-title">S6 → S7: 避实击虚与南征四郡</h3>
+                    <span class="card-tag tag-transition">Transition</span>
+                </div>
+                <div class="card-date">时间：209年底</div>
+                <p class="card-desc">驱动力：刘备亲率赵云等将南征，武陵、长沙、桂阳、零陵四郡不战或倒戈，刘备军力数月内实现原子裂变式暴增。</p>
+                <div class="accordion-btn" onclick="toggleConduit('T6_7', event)">⚙️ 展开演化细节与驱动力</div>
+                <div class="accordion-content" id="conduit-content-T6_7">
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #ef4444;">触发驱动力 (Trigger Drivers):</div>
+                    <ul style="margin-bottom: 8px;">
+                        <li><b>刘备游击南征 (D_Liu_Bei_Southern_Campaign)</b>: 刘备乘着周瑜、曹仁拼死相顾无暇他顾，挥师横扫防备空虚的荆南四郡 [Fact]</li>
+                        <li><b>四郡太守易帜 (D_Four_Shires_Surrender)</b>: 长沙韩玄、零陵刘度、桂阳赵范、武陵金旋投降或兵溃归宿刘备 [Fact]</li>
+                    </ul>
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #60a5fa;">结构性冲击 (Structural Impact):</div>
+                    <ul>
+                        <li>刘备不仅获得广袤根据地，更借收降地方军民让兵力暴增至数万人，彻底走出客军绝境 [Fact]</li>
+                        <li>割据力量天平迅速倾斜：周瑜伤疲拿下南郡后，发现处于做大的刘备的合围中 [Inference]</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- S7 -->
+        <div class="timeline-item" id="item-S7">
+            <div class="timeline-dot" onclick="selectNode('S7')"></div>
+            <div class="timeline-card" onclick="selectNode('S7')">
+                <div class="card-header">
+                    <h3 class="card-title">S7: 刘备暴涨与借地博弈</h3>
+                    <span class="card-tag tag-snapshot">Snapshot</span>
+                </div>
+                <div class="card-date">时间：209年底 - 210年</div>
+                <p class="card-desc">刘备坐拥四郡，但发现四郡缺乏长江防线支撑，且与后防脱节。周瑜虽夺下江陵，但江东在南郡与曹军直接冲突、后勤极度吃紧，两家陷入复杂的割据地缘角力。</p>
+            </div>
+        </div>
+        
+        <!-- DEC_SQ_LN -->
+        <div class="timeline-item" id="item-DEC_SQ_LN">
+            <div class="timeline-dot decision-dot" onclick="selectNode('DEC_SQ_LN')"></div>
+            <div class="timeline-card" onclick="selectNode('DEC_SQ_LN')">
+                <div class="card-header">
+                    <h3 class="card-title">决策: 租借南郡（借荆州）</h3>
+                    <span class="card-tag tag-decision">Decision</span>
+                </div>
+                <div class="card-date">时间：210年</div>
+                <p class="card-desc">210年周瑜病逝，留守江陵的鲁肃力劝孙权采取地缘转嫁战略。刘备亲临京口，求借南郡以连接自身底盘并作为进取西川之跳板。</p>
+                
+                <!-- Split track container -->
+                <div class="decision-fork-container">
+                    <div class="fork-option-card selected-path" onclick="selectNode('OPT_LEASE_NJ', event)">
+                        <div class="option-title">已选：租借南郡</div>
+                        <div class="option-desc">将南郡江陵交给刘备督管。意图结局：让刘备当挡箭牌挡住曹操。实际结局：刘备由此入蜀。但未来领土摩擦导致同盟破裂、吕蒙白衣渡江袭杀关羽。</div>
+                    </div>
+                    <div class="fork-option-card unselected-path" onclick="selectNode('OPT_CONTAIN_LB', event)">
+                        <div class="option-title">未选：扣留刘备</div>
+                        <div class="option-desc">听从周瑜生前之计，扣押刘备、吞并其军。实际可能：荆南立刻叛乱反吞，导致联盟崩溃、曹操乘机南征一举覆灭江东。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- T7_8 -->
+        <div class="timeline-item" id="item-T7_8">
+            <div class="timeline-dot conduit-dot" onclick="selectNode('T7_8')"></div>
+            <div class="timeline-card conduit-card" onclick="selectNode('T7_8')">
+                <div class="card-header">
+                    <h3 class="card-title">S7 → S8: 借地均势与川蜀跳板</h3>
+                    <span class="card-tag tag-transition">Transition</span>
+                </div>
+                <div class="card-date">时间：210年底</div>
+                <p class="card-desc">驱动力：孙权同意鲁肃之策，正式将江陵（南郡）移交刘备。刘备自此连片拥有荆北南、荆南，军事大门洞开。</p>
+                <div class="accordion-btn" onclick="toggleConduit('T7_8', event)">⚙️ 展开演化细节与驱动力</div>
+                <div class="accordion-content" id="conduit-content-T7_8">
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #ef4444;">触发驱动力 (Trigger Drivers):</div>
+                    <ul style="margin-bottom: 8px;">
+                        <li><b>鲁肃鼎力主盟 (D_Lu_Su_Alliance_Strategy)</b>: 鲁肃劝说孙权借地，认为‘曹操虽退，实力仍强。将江陵借刘备，一可树抗曹大敌，二可固两家盟好’ [Fact]</li>
+                        <li><b>周瑜病逝临终 (D_Zhou_Yu_Passing)</b>: 周瑜病卒，江东主战激进派受阻，鲁肃继任，抗曹主线转为守成与战略同盟 [Fact]</li>
+                    </ul>
+                    <div style="font-weight: bold; margin-bottom: 4px; color: #60a5fa;">结构性冲击 (Structural Impact):</div>
+                    <ul>
+                        <li>刘备获得汉水与长江交汇的绝佳桥头堡，入蜀通道打通 [Inference]</li>
+                        <li>江东大军收缩至长江下游，后撤防线，地缘格局重归稳定，等待下一次均势打破 [Inference]</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- S8 -->
+        <div class="timeline-item" id="item-S8">
+            <div class="timeline-dot" onclick="selectNode('S8')"></div>
+            <div class="timeline-card" onclick="selectNode('S8')">
+                <div class="card-header">
+                    <h3 class="card-title">S8: 三分天下与入蜀西征</h3>
+                    <span class="card-tag tag-snapshot">Snapshot</span>
+                </div>
+                <div class="card-date">时间：210年底 - 211年</div>
+                <p class="card-desc">借地博弈尘埃落定。曹操扼守襄阳，孙权盘踞沿江柴桑以东，刘备任命关羽率重兵坐镇江陵锁死大门，自己亲率几万精锐主力逆长江而上、正式开启入蜀西征。三国鼎立的终极地缘帷幕彻底拉开。</p>
+            </div>
+        </div>
+
+        </div>
+    </div>
+    
+    <div id="pane-divider" role="separator" aria-orientation="vertical" aria-label="拖动调整左右面板宽度" tabindex="0"></div>
+
+    <!-- Right Sticky Details Sidebar Drawer -->
+    <div id="sidebar-area">
+        <div id="sidebar-content" class="welcome-msg">
+            <h3>⏳ 历史演化时间轴 V6.0</h3>
+            <p>1. 点击左侧时间线上的 <b>Snapshot（圆形锚点）</b>，可在此查看各势力在特定时期的<b>主客观认知、战略目标和即时压力</b>建模。</p>
+            <p>2. 点击 <b>Transition（红色椭圆）</b> 可直接在时间线上<b>折叠/展开演变细节</b>，亦可点击此卡片在右侧查看系统结构性冲击分析。</p>
+            <p>3. 点击 <b>Decision（黄色菱形）</b> 及下方的平行卡片，可在右侧查看<b>决策背景、当时承受的巨大政治压力，以及已选与未选方案的结局和What-If推演对比</b>。</p>
+            <p style="font-size: 11px; color: #475569; margin-top: 24px;">三国赤壁历史演化图谱数据库 &copy; 2026</p>
+        </div>
+    </div>
+    
+</div>
+
+<script type="text/javascript">
+    // Fully populated database compiled from S0, S1-S2, S3-S4, S5-S8 YAMLs
+    const nodeDatabase = {
+  "S0": {
+    "snapshot_id": "S0_Before_Southern_Campaign",
+    "time_period": "208年7月 (建安十三年七月)",
+    "description": "初始世界状态：曹操整训完毕准备南下，刘表病重，荆州继承危机爆发在即，刘备依附新野，江东孙权静观其变。",
+    "factions": {
+      "cao_cao_group": {
+        "name": "曹操集团",
+        "leader": "曹操",
+        "base": "邺城 / 许都",
+        "objective_state": {
+          "territory": [
+            "控制中原及北方大部 [Fact]",
+            "实际控制朝廷及汉献帝 [Fact]"
+          ],
+          "military_resources": [
+            "统领北方精锐，骑兵及步兵规模庞大 [Fact]",
+            "邺城玄武池整训水军 [Fact]",
+            "北方士兵不习水战，存在水土不服及疫病隐患 [Inference]"
+          ]
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_liu_biao": "荆州刘表虽有地盘但病重且守成，其子懦弱，不足为虑 [Fact]",
+            "toward_liu_bei": "刘备是当世枭雄，客居新野是心腹大患，必须予以彻底消灭 [Account]",
+            "toward_sun_quan": "江东有长江之险，周瑜水军精锐，是平定南方的主要阻碍 [Inference]"
+          },
+          "strategic_goals": [
+            "迅速扫平荆州，夺取江陵物资，进而顺江东下平定江东，实现天下统一 [Fact]"
+          ],
+          "pressures": [
+            "北方后方（关中马腾、韩遂等）虽暂时安抚，但仍有潜在不稳定因素 [Inference]",
+            "必须在后方局势生变前迅速解决南方战局，时间窗口有限 [Inference]"
+          ]
+        },
+        "current_action": "大军向南部边界集结，作南征最后动员 [Fact]"
+      },
+      "liu_biao_group": {
+        "name": "荆州刘表集团",
+        "leader": "刘表",
+        "base": "襄阳 (治所) / 江陵 (战略物资基地)",
+        "objective_state": {
+          "territory": [
+            "控制荆州七郡 (南阳、南郡、江夏、零陵、桂阳、武陵、长沙) [Fact]"
+          ],
+          "military_resources": [
+            "拥有雄厚的水军力量，战船千艘，带甲十余万 [Fact]",
+            "粮草极为充沛，江陵屯积了大量军需物资 [Fact]"
+          ]
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_cao_cao": "曹操势力极强，南征迫在眉睫，荆州无力单独正面抗衡 [Fact]",
+            "toward_liu_bei": "既需要利用刘备屯兵新野作为抵御曹操的北面屏障，又极其防范其夺取荆州，因而限制其兵力 [Account]",
+            "toward_sun_quan": "孙权刚击杀黄祖，两家有杀父之仇，江东随时可能西进夺取江夏 [Fact]"
+          },
+          "strategic_goals": [
+            "保境安民，维持荆州割据现状 [Fact]",
+            "在病榻上平稳完成家族继承，确保蔡氏和刘氏家族在荆州的既得利益 [Inference]"
+          ],
+          "pressures": [
+            "刘表病笃，权力继承人未定 [Fact]",
+            "内部严重分裂：长子刘琦（亲刘备派）与次子刘琮（蔡氏外戚派）争夺继承权，蔡瑁、张允等掌控军事大权 [Fact]",
+            "外有曹操压境之军事窒息感，内有刘备客军之隐忧 [Inference]"
+          ]
+        },
+        "current_action": "刘表病重卧床，蔡瑁、张允封锁消息并排挤刘琦；刘琦出镇江夏以避祸 [Fact]"
+      },
+      "liu_bei_group": {
+        "name": "刘备集团",
+        "leader": "刘备",
+        "base": "新野 (客居)",
+        "objective_state": {
+          "territory": [
+            "无独立根据地，仅代守荆北边境的新野、樊城一带 [Fact]"
+          ],
+          "military_resources": [
+            "兵力微薄，精锐客军约数千至万余人，缺乏战略纵深和重型补给 [Fact]",
+            "有关羽、张飞、赵云等猛将，及新招纳的诸葛亮提供战略规划 [Fact]"
+          ]
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_cao_cao": "不可妥协的宿敌，曹操南下将带来毁灭性打击，必须死守或南撤 [Fact]",
+            "toward_liu_biao": "刘表是宗室长者且提供庇护，不可公然夺其位置，但刘表一死荆州必乱 [Account]",
+            "toward_sun_quan": "孙权据有江东，实力强劲，是抗曹唯一的潜在强力盟友 [Inference]"
+          },
+          "strategic_goals": [
+            "在曹操南下前的夹缝中求生，寻找机会获取荆州立足之地 [Account]"
+          ],
+          "pressures": [
+            "军事力量极度悬殊，新野无险可守，首当其冲 [Fact]",
+            "寄人篱下，受制于刘表及蔡瑁集团的猜忌，无法名正言顺地动员荆州资源 [Inference]"
+          ]
+        },
+        "current_action": "在樊城、新野一带积极整军，密切关注襄阳刘表病况及曹操大军动向 [Fact]"
+      },
+      "sun_quan_group": {
+        "name": "江东孙权集团",
+        "leader": "孙权",
+        "base": "建业 / 柴桑",
+        "objective_state": {
+          "territory": [
+            "控制江东六郡，新夺取江夏部分地盘 (击杀黄祖) [Fact]"
+          ],
+          "military_resources": [
+            "拥有一支极其精锐且经验丰富的水军，周瑜为大都督，扼守长江天险 [Fact]"
+          ]
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_cao_cao": "曹操平定北方后必然南下，若其顺江而下，江东将直接暴露在兵锋之下 [Inference]",
+            "toward_liu_biao": "两家是世代仇敌。视荆州为江东的天然门户与扩张方向，若荆州落入曹操之手，江东危殆 [Fact]",
+            "toward_liu_bei": "刘备是抗曹的屏障与盟友，可联合但需评估其价值 [Inference]"
+          },
+          "strategic_goals": [
+            "巩固江东政权，保障长江防线安全 [Fact]",
+            "若有机会，顺长江西进夺取荆州，实行‘鲁肃榻上策’，与曹操南北对峙 [Account]"
+          ],
+          "pressures": [
+            "江东政权建立未久，内部山越势力尚未彻底肃清 [Fact]",
+            "面对曹操的庞大声势，内部文臣集团（如张昭等）存在强烈的妥协和投降倾向 [Inference]"
+          ]
+        },
+        "current_action": "在柴桑部署重兵，令周瑜、鲁肃等整训水军，密切监视荆州和北方曹军动向 [Fact]"
+      }
+    },
+    "model_state_analysis": {
+      "why_S0_is_unstable": [
+        "刘表生命垂危，他是维持‘荆州暂不投降’和‘刘备屯兵边界’这两个系统动态平衡的唯一核心纽带 [Inference]",
+        "曹操南征动员完成，一旦越过边界，军事压力将迫使荆州必须在‘战’与‘降’之间做出抉择，无法继续维持现状 [Inference]",
+        "江东孙权完成对江夏黄祖的打击，打破了原有的长江中游力量均势 [Fact]"
+      ]
+    },
+    "node_type": "snapshot",
+    "title": "S0: 曹操南征前的世界状态"
+  },
+  "T0_1": {
+    "transition_id": "T_S0_to_S1",
+    "trigger_drivers": [
+      {
+        "driver_id": "D_Liu_Biao_Death",
+        "description": "荆州牧刘表病逝，引发荆州集团权力真空与继承危机 [Fact]"
+      },
+      {
+        "driver_id": "D_Cao_Cao_Advance",
+        "description": "曹操南征大军越过边界，长驱直入，给荆州带来极限军事压力 [Fact]"
+      }
+    ],
+    "structural_impact": [
+      "刘表死后，蔡瑁、张允等外戚夺权，拥立次子刘琮继位，彻底排挤长子刘琦及亲刘备派，荆州内部防线不战自溃 [Fact]",
+      "刘备客军丧失了政治互信与后勤支撑，瞬间暴露于曹操兵锋之下 [Inference]"
+    ],
+    "node_type": "transition",
+    "title": "S0 → S1: 系统失稳与压力释放",
+    "time_period": "208年7月 - 8月"
+  },
+  "S1": {
+    "snapshot_id": "S1_Jingzhou_Change_Of_Leadership",
+    "time_period": "208年8月 - 9月上旬",
+    "description": "刘表去世后，刘琮继位。曹操大军压境，新野、襄阳危在旦夕。刘备集团因信息被封锁，处于被动状态。",
+    "factions": {
+      "cao_cao_group": {
+        "name": "曹操集团",
+        "leader": "曹操",
+        "objective_state": {
+          "location": "已过宛城，直逼新野、襄阳 [Fact]",
+          "military_strength": "号称数十万，铁骑步兵锐不可当 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_liu_cong": "孺子不可教，其左右多有迎降之意，荆州可兵不血刃而下 [Inference]",
+            "toward_liu_bei": "刘备必会南逃，需以精骑急追，防止其夺取江陵物资 [Inference]"
+          },
+          "strategic_goals": [
+            "迅速逼降刘琮，占领襄阳和军事重镇江陵，切断刘备退路 [Fact]"
+          ],
+          "pressures": [
+            "兵锋虽盛，但战线不断拉长，后勤补给线承压 [Inference]"
+          ]
+        },
+        "current_action": "亲率大军长驱直入，派出先锋试探新野 [Fact]"
+      },
+      "liu_cong_group": {
+        "name": "荆州刘琮集团 (承袭自刘表)",
+        "leader": "刘琮",
+        "objective_state": {
+          "location": "襄阳 (治所) [Fact]",
+          "military_strength": "继承刘表十万带甲，但因人心浮动、缺乏统一指挥，实际战力大幅削弱 [Inference]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_cao_cao": "曹操势不可挡，抵抗如同以卵击石 [Fact]",
+            "toward_liu_bei": "若命刘备御敌，恐其喧宾夺主，反夺荆州 [Account]"
+          },
+          "strategic_goals": [
+            "保全刘氏宗族安全及蔡氏、蒯氏等世家地主的既得利益 [Fact]"
+          ],
+          "pressures": [
+            "内部文臣武将（蒯越、韩嵩、傅巽等）一致劝降，刘琮年少无法抗衡世家压力 [Fact]",
+            "长子刘琦在江夏虎视眈眈，随时可能借刘备之手争夺继承权 [Inference]"
+          ]
+        },
+        "current_action": "封锁刘表死讯及曹操南征消息，暗中遣使向曹操上表请降 [Fact]"
+      },
+      "liu_bei_group": {
+        "name": "刘备集团",
+        "leader": "刘备",
+        "objective_state": {
+          "location": "新野 / 樊城 [Fact]",
+          "military_strength": "精锐数千人，并无城防优势 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_liu_cong": "刘表死后，刘琮继位且暗中图谋，襄阳政权已不可信 [Fact]",
+            "toward_cao_cao": "曹军先锋已至，新野绝不可守 [Fact]"
+          },
+          "strategic_goals": [
+            "探明襄阳虚实，一旦事态生变，立刻向南撤退以保全有生力量 [Inference]"
+          ],
+          "pressures": [
+            "完全处于信息劣势：刘琮降曹消息被封锁，刘备极易被曹操合围歼灭 [Fact]",
+            "新野无粮草储备，无法进行持久战 [Fact]"
+          ]
+        },
+        "current_action": "发现曹军先锋逼近，退往樊城，并派人前往襄阳打探刘表情况 [Fact]"
+      },
+      "sun_quan_group": {
+        "name": "江东孙权集团",
+        "leader": "孙权",
+        "objective_state": {
+          "location": "柴桑 (重兵集结地) [Fact]",
+          "military_strength": "水军随时待命 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_jingzhou": "刘表死后荆州必乱，此乃天赐江东夺取荆州、划江而治之良机 [Fact]",
+            "toward_cao_cao": "一旦曹操吞并荆州，江东将直接面对顺流而下的曹军，唇亡齿寒 [Inference]"
+          },
+          "strategic_goals": [
+            "趁乱拉拢荆州名士及刘备客军，共同抗曹 [Fact]",
+            "探知荆州内部虚实，若刘琮降曹，则需立即做出战守准备 [Inference]"
+          ],
+          "pressures": [
+            "曹操威名过盛，江东内部人心惶惶 [Inference]"
+          ]
+        },
+        "current_action": "派遣鲁肃以‘吊唁刘表’为名奔赴荆州，实则暗中观察局势，联络刘备 [Fact]"
+      }
+    },
+    "node_type": "snapshot",
+    "title": "S1: 荆州易主与大军压境"
+  },
+  "DEC_LC": {
+    "decision_id": "DEC_Liu_Cong_Surrender",
+    "decision_maker": "刘琮",
+    "context": "建安十三年九月，曹操大军抵达宛城，刘琮面临曹操大军逼境与内部世家倒戈的双重绝境 [Fact]",
+    "pressures_undergone": [
+      "傅巽、蒯越等谋臣以‘逆顺有体、强弱有势’为由强力劝降，指出‘若抗曹则需依靠刘备，然刘备若抗曹成功则荆州归刘备，抗曹失败则荆州归曹操，刘琮皆无立足之地’ [Fact]",
+      "曹操军事力量具有压倒性优势，荆州军无战意 [Inference]"
+    ],
+    "options": [
+      {
+        "option_id": "OPT_Surrender",
+        "description": "兵不血刃，举州投降曹操 [Fact]",
+        "intended_outcome": "保全刘氏宗室富贵，蔡氏、蒯氏等豪强家族利益不受战争损害，自身保留荆州牧职位 [Inference]",
+        "actual_outcome": "曹操不费一兵一卒接管整个荆州（含江陵战略要地）[Fact]。刘琮被明升暗降，迁为青州刺史，彻底失去军政实权 [Fact]。蔡瑁、蒯越等荆州功臣皆封侯晋爵，大获重用 [Fact]。",
+        "is_selected": true,
+        "node_type": "option",
+        "title": "方案: 兵不血刃，举州投降曹操 [Fact]",
+        "time_period": "208年9月"
+      },
+      {
+        "option_id": "OPT_Resist_With_Liu_Bei",
+        "description": "联合新野的刘备，动员荆州水陆军抵抗曹操 [Inference]",
+        "intended_outcome": "依靠汉水、长江天险阻挡曹军，维持荆州割据政权 [Inference]",
+        "actual_outcome": "（未选择）可能导致荆州陷入惨烈战火，刘琮权柄被刘备架空，或者在曹军攻势下城破身死 [Inference]",
+        "is_selected": false,
+        "node_type": "option",
+        "title": "方案: 联合新野的刘备，动员荆州水陆军抵抗曹操 [Inference]",
+        "time_period": "208年9月"
+      }
+    ],
+    "node_type": "decision",
+    "title": "决策节点: 刘琮投降抉择",
+    "time_period": "208年9月"
+  },
+  "OPT_SURR": {
+    "option_id": "OPT_Surrender",
+    "description": "兵不血刃，举州投降曹操 [Fact]",
+    "intended_outcome": "保全刘氏宗室富贵，蔡氏、蒯氏等豪强家族利益不受战争损害，自身保留荆州牧职位 [Inference]",
+    "actual_outcome": "曹操不费一兵一卒接管整个荆州（含江陵战略要地）[Fact]。刘琮被明升暗降，迁为青州刺史，彻底失去军政实权 [Fact]。蔡瑁、蒯越等荆州功臣皆封侯晋爵，大获重用 [Fact]。",
+    "is_selected": true,
+    "node_type": "option",
+    "title": "方案: 兵不血刃，举州投降曹操 [Fact]",
+    "time_period": "208年9月"
+  },
+  "OPT_RESIST": {
+    "option_id": "OPT_Resist_With_Liu_Bei",
+    "description": "联合新野的刘备，动员荆州水陆军抵抗曹操 [Inference]",
+    "intended_outcome": "依靠汉水、长江天险阻挡曹军，维持荆州割据政权 [Inference]",
+    "actual_outcome": "（未选择）可能导致荆州陷入惨烈战火，刘琮权柄被刘备架空，或者在曹军攻势下城破身死 [Inference]",
+    "is_selected": false,
+    "node_type": "option",
+    "title": "方案: 联合新野的刘备，动员荆州水陆军抵抗曹操 [Inference]",
+    "time_period": "208年9月"
+  },
+  "T1_2": {
+    "transition_id": "T_S1_to_S2",
+    "trigger_drivers": [
+      {
+        "driver_id": "D_Liu_Cong_Surrender_Executed",
+        "description": "刘琮正式投降曹操，导致襄阳及汉水防御体系瞬间蒸发，曹军畅通无阻 [Fact]"
+      },
+      {
+        "driver_id": "D_Liu_Bei_Late_Discovery",
+        "description": "刘备在樊城方知刘琮已降，被动陷入腹背受敌、无路可退的死局 [Fact]"
+      }
+    ],
+    "structural_impact": [
+      "刘备被迫放弃樊城，裹挟十万不愿降曹的百姓南撤，目标夺取军事重镇江陵 [Fact]",
+      "曹操唯恐刘备抢先占领江陵获得物资，命曹纯率精锐‘虎豹骑’一日一夜行三百余里展开极限追击 [Fact]"
+    ],
+    "node_type": "transition",
+    "title": "S1 → S2: 襄阳易主与当阳追击",
+    "time_period": "208年9月中旬"
+  },
+  "S2": {
+    "snapshot_id": "S2_Changban_Defeat_And_Jiangling_Loss",
+    "time_period": "208年9月中旬 - 下旬",
+    "description": "长坂坡之战爆发，刘备集团精锐损失殆尽，仓皇退守夏口；曹操不费一兵一卒夺取江陵，孙刘两家退无可退。",
+    "factions": {
+      "cao_cao_group": {
+        "name": "曹操集团",
+        "leader": "曹操",
+        "objective_state": {
+          "location": "进驻襄阳，继而兵不血刃占领江陵 [Fact]",
+          "military_strength": "完全接收江陵积攒的军实、战船，并收编荆州水陆军数万人，总兵力激增 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_liu_bei": "刘备长坂坡惨败，仅带数十骑逃走，其残部已不足为虑 [Fact]",
+            "toward_sun_quan": "江东孙氏孤立，今大军顺流而下，孙权若不降，必如摧枯拉朽般消灭之 [Inference]"
+          },
+          "strategic_goals": [
+            "迅速修整水军，顺江东下，一鼓作气消灭孙权，彻底平定南方 [Fact]"
+          ]
+        },
+        "pressures": [
+          "荆州新附，人心未定，吏民表面顺从实则观望 [Inference]",
+          "北方士兵水土不服，开始出现疫病苗头，且不习水战，战斗力打折扣 [Inference]"
+        ],
+        "current_action": "在江陵大会荆州群臣，向孙权寄出恐吓信（‘今治水军八十万众，方与将军会猎于吴’），逼其就范 [Fact]"
+      },
+      "liu_bei_group": {
+        "name": "刘备集团",
+        "leader": "刘备",
+        "objective_state": {
+          "location": "当阳兵败后，折向东行，与关羽水军会合于汉津，最终退守夏口（与刘琦江夏兵合兵）[Fact]",
+          "military_strength": "陆军主力在长坂坡几乎全军覆没，仅剩关羽精锐水军万余人，以及刘琦江夏万余人，失去全部地盘与辎重 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_cao_cao": "力量悬殊达到顶点，单凭自身绝无生存可能 [Fact]",
+            "toward_sun_quan": "孙权是唯一能挽救危局的稻草，江东水军是抗衡曹军的绝对核心 [Inference]"
+          },
+          "strategic_goals": [
+            "在夏口立足，促成与孙权的联合，借江东之力死里求生 [Inference]"
+          ]
+        },
+        "pressures": [
+          "生死存亡关头：长坂之战痛失家眷与主力，将士疲惫、士气低落，且无后方根据地支持 [Fact]"
+        ],
+        "current_action": "在夏口与鲁肃紧急会晤。刘备派遣诸葛亮作为特使，随鲁肃前往柴桑游说孙权 [Fact]"
+      },
+      "sun_quan_group": {
+        "name": "江东孙权集团",
+        "leader": "孙权",
+        "objective_state": {
+          "location": "柴桑 / 京口 [Fact]",
+          "military_strength": "数万精锐水军在长江沿线整训，江东本土防线完好 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_cao_cao": "曹操已得江陵水军和物资，‘会猎’之信是极其严重的战争动员，江东已无缓冲地带 [Fact]",
+            "toward_liu_bei": "刘备虽败，但关羽水军和江夏兵尚存两万人，仍可作为联合作战的辅助力量 [Fact]",
+            "internal_faction_split": "张昭等文官认为‘曹操挟天子以令诸侯，又得荆州水军，长江之险已与我共之，抗之必亡，不如迎接’ [Fact]；鲁肃、周瑜则坚持‘若降，将军无处容身；若战，曹军长途跋涉且不习水战，必可击败’ [Fact]"
+          },
+          "strategic_goals": [
+            "在投降（沦为阶下囚）与死战（保留割据政权）之间进行最后的生死抉择 [Inference]"
+          ]
+        },
+        "pressures": [
+          "内部舆论空前撕裂，降臣言论占据主流，考验孙权的政治魄力 [Fact]",
+          "曹军顺江而下的物理威胁已迫在眉睫 [Inference]"
+        ],
+        "current_action": "召集文武百官展开激烈的廷议，等待周瑜自外地赶回，并准备接见诸葛亮 [Fact]"
+      }
+    },
+    "node_type": "snapshot",
+    "title": "S2: 当阳惨败与江陵易手"
+  },
+  "T2_3": {
+    "transition_id": "T_S2_to_S3",
+    "trigger_drivers": [
+      {
+        "driver_id": "D_Zhuge_Liang_Diplomacy",
+        "description": "诸葛亮随鲁肃奔赴柴桑，舌战群儒，精辟解剖曹操虚实，论证孙刘联合的可行性 [Fact]"
+      },
+      {
+        "driver_id": "D_Zhou_Yu_Recall",
+        "description": "周瑜自鄱阳召回，以大都督身份进行战略与军事论证，彻底稳固了孙权抗曹决心 [Fact]"
+      }
+    ],
+    "structural_impact": [
+      "孙刘达成战略同盟，由单打独斗转为多军兵种、跨流域协同作战 [Inference]",
+      "孙权拨刀砍案，打破降派主导的朝堂舆论，江东全力转入战时动员 [Fact]",
+      "刘备得以在夏口获得急需的战略喘息与盟军掩护 [Inference]"
+    ],
+    "node_type": "transition",
+    "title": "S2 → S3: 舌战群儒与同盟建立",
+    "time_period": "208年10月"
+  },
+  "S3": {
+    "snapshot_id": "S3_Sun_Liu_Alliance_Formed",
+    "time_period": "208年10月",
+    "description": "孙刘战略同盟正式缔结。孙权任命周瑜、程普为左右都督，率江东三万精锐水军西进合兵夏口；刘备退守夏口、樊口，协同防御。",
+    "factions": {
+      "cao_cao_group": {
+        "name": "曹操集团",
+        "leader": "曹操",
+        "objective_state": {
+          "location": "江陵 (战略大本营) 及沿江集结地 [Fact]",
+          "military_strength": "号称八十万，实际水陆军约二十余万人，正在江陵混编训练荆州水军 [Inference]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_sun_liu": "孙刘虽可能暗中联络，但刘备已是强弩之末，江东内部人心涣散、主降声切，不足为虑 [Inference]",
+            "toward_jiang_river": "接收江陵大批战船及水军后，长江之险已为两家共有，可顺流一举荡平江东 [Fact]"
+          },
+          "strategic_goals": [
+            "迅速完成新附荆州水军与北方骑步兵的混编训练 [Inference]",
+            "顺江东下，以压倒性兵力逼降或消灭孙氏割据势力，统一全国 [Fact]"
+          ],
+          "pressures": [
+            "北方士兵水土不服，军中疫病开始流行并加速蔓延 [Fact]",
+            "荆州新附，后方社会治安及地方势力仍未完全稳固 [Inference]"
+          ]
+        },
+        "current_action": "亲率战船与主力水陆大军顺汉水、长江东下，进逼江夏 [Fact]"
+      },
+      "liu_bei_group": {
+        "name": "刘备集团",
+        "leader": "刘备",
+        "objective_state": {
+          "location": "夏口 / 樊口 [Fact]",
+          "military_strength": "关羽水军万余人，刘琦江夏兵万余人，与周瑜江东主力会合 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_cao_cao": "曹操兵力极盛但破绽明显（劳师远袭、不习水战、疫病），并非不可战胜 [Fact]",
+            "toward_sun_quan": "江东水军主力是狙击曹军的绝对核心，自身残部必须作为侧翼辅助，同甘共苦 [Inference]"
+          },
+          "strategic_goals": [
+            "依托同盟保护生存，击退曹操，乘机夺回荆州失地 [Inference]"
+          ]
+        },
+        "pressures": [
+          "残兵败卒、人心不稳，若此役再败则彻底失去中原割据可能，只能退流交州 [Fact]"
+        ],
+        "current_action": "刘备率军进驻樊口，与周瑜大军协同驻防，调度关羽、张飞等将领备战 [Fact]"
+      },
+      "sun_quan_group": {
+        "name": "江东孙权集团",
+        "leader": "孙权",
+        "objective_state": {
+          "location": "柴桑 (后方大本营) / 沿江防线 [Fact]",
+          "military_strength": "派遣左右都督周瑜、程普统领精锐水军三万人作为抗曹先锋 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_cao_cao": "曹操名为汉臣实为汉贼，且其水军多为新附，士兵水土不服，大有可战之机 [Fact]",
+            "toward_liu_bei": "刘备客军虽败但关羽水军犹存，可引为臂助，共同分担曹操首波军事压力 [Inference]"
+          },
+          "strategic_goals": [
+            "以长江为防线狙击曹操，保全江东基业，进而图谋荆州 [Fact]"
+          ]
+        },
+        "pressures": [
+          "赌上整个江东国运的军事冒险，一旦周瑜兵败，江东江山不保 [Inference]",
+          "降派文臣虽被暂时压制，但其在后方的舆论依然对战局构成潜在制约 [Inference]"
+        ],
+        "current_action": "孙权镇守柴桑，提供后勤保障与兵力储备；周瑜、程普率三万水军逆江而上迎击曹操 [Fact]"
+      }
+    },
+    "node_type": "snapshot",
+    "title": "S3: 孙刘同盟建立"
+  },
+  "DEC_SQ": {
+    "decision_id": "DEC_Sun_Quan_Resistance",
+    "decision_maker": "孙权",
+    "context": "建安十三年十月，曹操的会猎恐吓信送达柴桑，江东大震。内部文臣极力主降，刘备特使诸葛亮与主战核心周瑜、鲁肃对孙权展开轮番游说。 [Fact]",
+    "pressures_undergone": [
+      "以张昭为首的文官集团集体劝降，指出‘曹操拥百万之众、挟天子以令诸侯，长江之险已为彼我共之，抗击必亡’ [Fact]",
+      "江东宗室及部分将领态度摇摆，害怕战争导致宗庙覆灭 [Inference]",
+      "曹操大军顺流而下的物理威胁近在迟尺，留给决策的窗口极短 [Inference]"
+    ],
+    "options": [
+      {
+        "option_id": "OPT_Resist",
+        "description": "拔刀砍案，誓言‘诸君有复言降曹者，与此案同！’，联刘决战 [Fact]",
+        "intended_outcome": "通过长江水战击败曹操，保全江东政权独立，实现南北对峙或三分天下 [Fact]",
+        "actual_outcome": "孙刘联军在赤壁成功用火攻烧毁曹操战船，曹操惨败退回北方。此战直接锁定了天下三分的战略格局 [Fact]",
+        "is_selected": true,
+        "node_type": "option",
+        "title": "方案: 拔刀砍案，誓言‘诸君有复言降曹者，与此案同！’，联刘决战 [Fact]",
+        "time_period": "208年10月"
+      },
+      {
+        "option_id": "OPT_Surrender_East",
+        "description": "顺应张昭等降派文臣，解除武装投降曹操 [Fact]",
+        "intended_outcome": "避免江东生灵涂炭，保全孙氏家族性命与江南豪强既得利益 [Inference]",
+        "actual_outcome": "（未选择）极可能如同刘琮一样，孙权被剥夺兵权、明升暗降并软禁至北方，而江东世家大族通过倒戈平稳过渡 [Inference]",
+        "is_selected": false,
+        "node_type": "option",
+        "title": "方案: 顺应张昭等降派文臣，解除武装投降曹操 [Fact]",
+        "time_period": "208年10月"
+      }
+    ],
+    "node_type": "decision",
+    "title": "决策节点: 孙权生死抉择",
+    "time_period": "208年10月"
+  },
+  "OPT_RESIST_EAST": {
+    "option_id": "OPT_Resist",
+    "description": "拔刀砍案，誓言‘诸君有复言降曹者，与此案同！’，联刘决战 [Fact]",
+    "intended_outcome": "通过长江水战击败曹操，保全江东政权独立，实现南北对峙或三分天下 [Fact]",
+    "actual_outcome": "孙刘联军在赤壁成功用火攻烧毁曹操战船，曹操惨败退回北方。此战直接锁定了天下三分的战略格局 [Fact]",
+    "is_selected": true,
+    "node_type": "option",
+    "title": "方案: 拔刀砍案，誓言‘诸君有复言降曹者，与此案同！’，联刘决战 [Fact]",
+    "time_period": "208年10月"
+  },
+  "OPT_SURR_EAST": {
+    "option_id": "OPT_Surrender_East",
+    "description": "顺应张昭等降派文臣，解除武装投降曹操 [Fact]",
+    "intended_outcome": "避免江东生灵涂炭，保全孙氏家族性命与江南豪强既得利益 [Inference]",
+    "actual_outcome": "（未选择）极可能如同刘琮一样，孙权被剥夺兵权、明升暗降并软禁至北方，而江东世家大族通过倒戈平稳过渡 [Inference]",
+    "is_selected": false,
+    "node_type": "option",
+    "title": "方案: 顺应张昭等降派文臣，解除武装投降曹操 [Fact]",
+    "time_period": "208年10月"
+  },
+  "T3_4": {
+    "transition_id": "T_S3_to_S4",
+    "trigger_drivers": [
+      {
+        "driver_id": "D_First_Clash_Chibi",
+        "description": "孙刘联军水军先锋在赤壁与曹操大军先锋遭遇，曹操军不习水战初战不利，退守乌林 [Fact]"
+      },
+      {
+        "driver_id": "D_Cao_Cao_Chaining_Ships",
+        "description": "曹操为解决北方士兵晕船和风浪颠簸问题，下令将战船首尾相接，连为一体（连环船）[Fact]"
+      }
+    ],
+    "structural_impact": [
+      "曹军退守北岸乌林，联军进驻南岸赤壁，两军隔江形成静态对峙态势 [Fact]",
+      "连环船的出现为联军提供了毁灭性的单一打击破绽（火攻可能）[Inference]",
+      "军中大面积爆发的疫病严重削弱了曹军的实际战斗力 [Fact]"
+    ],
+    "node_type": "transition",
+    "title": "S3 → S4: 初战退守与连环锁船",
+    "time_period": "208年11月"
+  },
+  "S4": {
+    "snapshot_id": "S4_Chibi_Pre_Battle_Standoff",
+    "time_period": "208年11月 - 12月",
+    "description": "联军与曹操主力在赤壁-乌林一线隔江对峙。曹操采用连环船克服风浪，周瑜、黄盖暗中筹划火攻，诈降计已秘密展开，决战一触即发。",
+    "factions": {
+      "cao_cao_group": {
+        "name": "曹操集团",
+        "leader": "曹操",
+        "objective_state": {
+          "location": "乌林 (长江北岸) 设营驻扎 [Fact]",
+          "military_strength": "水陆军数量虽仍占优，但军中疫病死亡枕藉，北方士兵士气极其低落 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_huang_gai": "信以为真：黄盖为江东老臣，被周瑜鞭笞（苦肉计为后世解释/合理推断，史实仅黄盖暗通降书），其降意属实，江东崩溃在即 [Fact]",
+            "toward_fire_threat": "自认为寒冬腊月只有西北风，联军在南岸无法使用火攻，因而对战船相连的防火安全不作防备 [Fact]"
+          },
+          "strategic_goals": [
+            "接受黄盖投降，以此为突破口强渡长江，合围消灭孙刘联军 [Fact]"
+          ],
+          "pressures": [
+            "疫病泛滥，非战斗减员极快，时间拖延对己方极为不利，必须速战速决 [Inference]"
+          ]
+        },
+        "current_action": "战船首尾相连停靠于江北，等待黄盖约定投降之夜进行策应 [Fact]"
+      },
+      "sun_liu_coalition": {
+        "name": "孙刘联军",
+        "leader": "周瑜 / 刘备",
+        "objective_state": {
+          "location": "赤壁 (长江南岸) 设防对垒 [Fact]",
+          "military_strength": "约五万人（周瑜三万、刘备两万），战船整装待发，士气极高 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_cao_ships": "曹操连环船是天赐良机，战船密集且无法轻易移动，一火可尽烧之 [Fact]",
+            "toward_wind_direction": "必须等待短暂的东南风（气候异常或地形风），方可顺风纵火，否则火势会反噬南岸 [Inference]"
+          },
+          "strategic_goals": [
+            "利用黄盖诈降作为火攻载体，一举焚毁乌林曹军所有连环战船，取得战局突破 [Fact]"
+          ]
+        },
+        "pressures": [
+          "机会稍纵即逝，一旦火攻失败或诈降败露，联军将再无翻盘可能 [Inference]"
+        ],
+        "current_action": "黄盖挑选数十艘蒙冲斗舰，满载枯柴、灌注膏油，外覆帷幕并在后方系轻舟；周瑜紧盯着天气，等待东南风起 [Fact]"
+      }
+    },
+    "node_type": "snapshot",
+    "title": "S4: 赤壁对峙与战前态势"
+  },
+  "T4_5": {
+    "transition_id": "T_S4_to_S5",
+    "trigger_drivers": [
+      {
+        "driver_id": "D_Southeast_Wind_Rises",
+        "description": "冬季罕见的东南大风骤起，为联军火攻创造了绝对的气象和风向条件 [Fact]"
+      },
+      {
+        "driver_id": "D_Huang_Gai_Fire_Attack_Success",
+        "description": "黄盖亲率十艘满载灌油枯柴之“蒙冲斗舰”诈降，顺风放火，火烈风猛，瞬间引燃曹军相连战船，漫延及江北营寨 [Fact]"
+      }
+    ],
+    "structural_impact": [
+      "曹操长江水军主力彻底覆灭，战船营垒悉数化为灰烬，水路进攻线彻底崩溃 [Fact]",
+      "曹操被迫焚烧余船，亲率残兵败将从泥泞不堪的华容道狼狈突围撤退，退守江陵及襄阳，孙刘两军水陆并进追击 [Fact]"
+    ],
+    "node_type": "transition",
+    "title": "S4 → S5: 东南风起与赤壁大劫",
+    "time_period": "208年12月中旬"
+  },
+  "S5": {
+    "snapshot_id": "S5_Chibi_Victory_Cao_Retreat",
+    "time_period": "208年12月中旬 - 下旬",
+    "description": "赤壁大捷爆发。曹操经历乌林惨败、华容道逃亡，仓皇退至江陵。因军中大疫及后方局势动荡，曹操决定亲自率主力迅速北还，留曹仁、徐晃守江陵，乐进守襄阳以抵御同盟攻势。孙刘联军顺江挺进，反攻江陵。",
+    "factions": {
+      "cao_cao_group": {
+        "name": "曹操集团",
+        "leader": "曹操",
+        "objective_state": {
+          "location": "曹操率主力北撤邺城 / 曹仁留守江陵 (巴丘/江陵防线) [Fact]",
+          "military_strength": "水陆主力在赤壁火攻与大疫中损失超半，北方精锐精气神重挫，新附荆州军纷纷离散 [Inference]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_sun_liu": "孙刘同盟战力强悍，长江天险短期内不可逾越，南方一统契机已逝 [Inference]",
+            "toward_jingzhou": "江陵是荆州锁钥，若丢则襄阳震动、中原门户洞开，必须死守南郡 [Fact]"
+          },
+          "strategic_goals": [
+            "迅速还邺以巩固后方政治基本盘，抚平内部异动 [Inference]",
+            "命令曹仁在江陵进行焦土坚守，最大化拖延并消耗周瑜水军主力 [Inference]"
+          ],
+          "pressures": [
+            "惨败导致政治神话破灭，关中马超及后方世家大族出现离心异动隐患 [Inference]",
+            "败军多疫病，军队急需休整和重组 [Fact]"
+          ]
+        },
+        "current_action": "曹操率主力仓促北返；曹仁、徐晃整顿残兵死守江陵城防，设置沿江防线阻击同盟 [Fact]"
+      },
+      "sun_liu_coalition": {
+        "name": "孙刘联军",
+        "leader": "周瑜 / 刘备",
+        "objective_state": {
+          "location": "挺进巴丘及江陵外围沿江地带 [Fact]",
+          "military_strength": "联军锐气正盛，陆军约两万、水军三万，协同合围南郡 [Inference]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_cao_cao": "曹操大军虽走但曹仁守备严密，强攻江陵势势必是一场绞肉机式的攻坚战 [Fact]",
+            "internal_faction_split": "外敌暂退，战后地盘与资源分配（尤其是富庶的荆州治所南郡）将考验同盟脆弱的互信 [Inference]"
+          },
+          "strategic_goals": [
+            "孙权/周瑜：强攻江陵，控制南郡，将其作为江东西进川蜀、实现‘二分天下’的跳板 [Fact]",
+            "刘备/诸葛亮：避开江陵正面攻坚战，利用周瑜牵制曹军主力，自身图谋荆南肥沃的后方郡县 [Inference]"
+          ],
+          "pressures": [
+            "周瑜面临江东“独立夺取江陵”的战略渴望与高昂伤亡之间的冲突 [Inference]",
+            "刘备面临如果不能在战后迅速获得大块独立根据地，就会在同盟中沦为附庸的生死危机 [Inference]"
+          ]
+        },
+        "current_action": "周瑜亲率江东精锐强渡击败曹仁前锋，合围江陵；刘备则进驻巴丘、公安，并向孙权表荐刘琦为荆州刺史 [Fact]"
+      }
+    },
+    "node_type": "snapshot",
+    "title": "S5: 赤壁大捷与曹军北撤"
+  },
+  "T5_6": {
+    "transition_id": "T_S5_to_S6",
+    "trigger_drivers": [
+      {
+        "driver_id": "D_Nanjun_Campaign_Stalemate",
+        "description": "周瑜率江东大军猛攻江陵，曹仁死战不退，两军在南郡展开了长达一年的惨烈拉锯战，同盟主力被牢牢拖住 [Fact]"
+      },
+      {
+        "driver_id": "D_Liu_Bei_Guerrilla_Strategy",
+        "description": "诸葛亮向刘备献策“借力打力”，让周瑜在前方攻坚，刘备军则侧翼游击，暗中做大 [Inference]"
+      }
+    ],
+    "structural_impact": [
+      "江陵绞肉战将曹操与孙权的主要战略资源耗尽，导致荆州南部的四郡（长沙、零陵、武陵、桂阳）形成了力量真空 [Inference]",
+      "同盟的决策结构发生微妙分野：江东在进行“消耗极大的领土守成”，而刘备在寻找“低成本的领土获取” [Inference]"
+    ],
+    "node_type": "transition",
+    "title": "S5 → S6: 焦土攻坚与南郡对峙",
+    "time_period": "208年12月 - 209年"
+  },
+  "S6": {
+    "snapshot_id": "S6_Nanjun_Battle_And_Jingnan_Opening",
+    "time_period": "209年整年",
+    "description": "周瑜与曹仁在江陵城下血战数月，周瑜本人身中流矢，战局极其焦灼。与此同时，刘备在江南筑公安城作为新营，表面协助江东，暗中已完成南征四郡的战争动员。",
+    "factions": {
+      "cao_cao_group": {
+        "name": "曹操集团",
+        "leader": "曹操 (曹仁前方代理)",
+        "objective_state": {
+          "location": "死守江陵城城防 / 乐进屯兵襄阳 [Fact]",
+          "military_strength": "曹仁所部伤亡极重，但凭借江陵坚城与城内充足的物资，依然能有效杀伤江东步兵 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_zhou_yu": "周瑜急于建功，只要死拖南郡，就能极大地消耗江东元气 [Inference]",
+            "toward_liu_bei": "刘备在南岸游动，正乘机渗透荆南，但己方在荆南防务极虚，只能放弃 [Inference]"
+          },
+          "strategic_goals": [
+            "以南郡为饵，锁死周瑜主力，迟滞江东整体战略态势 [Inference]"
+          ]
+        },
+        "pressures": [
+          "曹仁军孤立无援，虽然江陵坚固，但外围交通已大部被联军切断，长此以往城必破 [Inference]"
+        ],
+        "current_action": "曹仁亲率精锐出城突击突围（如救牛金），极力打击江东士气，维持城防不破 [Fact]"
+      },
+      "sun_quan_group": {
+        "name": "江东孙权集团",
+        "leader": "孙权 (周瑜前方代理)",
+        "objective_state": {
+          "location": "包围江陵城 / 步步蚕食南郡周边 [Fact]",
+          "military_strength": "周瑜三万水陆精锐多有折损，周瑜本人被流矢射中右胁，伤势严重，士气出现波动 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_nanjun_value": "必须不惜一切代价拿下江陵，否则赤壁之战的成果将被白白浪费 [Fact]",
+            "toward_liu_bei": "刘备向己方“借兵”并图谋荆南，虽令人猜忌，但围攻江陵仍需其侧翼骚扰及刘琦名义支持，不得不容忍 [Inference]"
+          },
+          "strategic_goals": [
+            "强攻夺取江陵，随后消灭蜀地刘璋，将荆蜀据为己有 [Account]"
+          ]
+        },
+        "pressures": [
+          "久攻不克，江东后方对这场代价高昂的消耗战开始出现财政与兵源压力 [Inference]"
+        ],
+        "current_action": "周瑜抱病督战，联手甘宁攻占夷陵以切断曹仁西退之路，持续对江陵施压 [Fact]"
+      },
+      "liu_bei_group": {
+        "name": "刘备集团",
+        "leader": "刘备",
+        "objective_state": {
+          "location": "公安 (油江口) 设营 / 汉津水军协同 [Fact]",
+          "military_strength": "吸收了部分荆州流亡兵员与江夏残部，实力回升至两万余人 [Inference]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_zhou_yu": "周瑜虽勇但伤亡极重，一旦其攻克南郡，刘备若无地盘将彻底被边缘化 [Inference]",
+            "toward_jing_nan": "南四郡山高皇帝远，曹操势力名义控制，守备极度空虚，正是最完美的基业之地 [Fact]"
+          },
+          "strategic_goals": [
+            "借同盟掩护，避实击虚，派遣猛将挥师南征，夺取荆南四郡 [Fact]"
+          ]
+        },
+        "pressures": [
+          "盟军刘琦重病（于209年去世），名义上的“荆州牧”招牌即将失效，必须在名分丧失前尽快夺地 [Fact]"
+        ],
+        "current_action": "表荐刘琦为荆州刺史（名正言顺），屯兵公安，整军备战，诸葛亮调度后勤，关张赵蓄势待发 [Fact]"
+      }
+    },
+    "node_type": "snapshot",
+    "title": "S6: 南郡僵局与力量真空"
+  },
+  "T6_7": {
+    "transition_id": "T_S6_to_S7",
+    "trigger_drivers": [
+      {
+        "driver_id": "D_Jingnan_Expedition",
+        "description": "刘备亲率大军大举南征荆南四郡，在诸葛亮、关、张、赵等重臣协同下，四郡望风而降或战败归顺 [Fact]"
+      },
+      {
+        "driver_id": "D_Jiangling_Sovereignty_Change",
+        "description": "在围攻近一年后，曹操认为死守江陵消耗过大无战略意义，手令曹仁引军撤出，江陵终于易主落入周瑜之手 [Fact]"
+      }
+    ],
+    "structural_impact": [
+      "刘备在极短时间内吞并四郡（长沙、零陵、桂阳、武陵），势力版图实现了戏剧性的爆发，获得了庞大的粮草和兵员补充 [Fact]",
+      "周瑜虽获得南郡（江陵），但江东精锐死伤累累，且发现南郡直接暴露在北面襄阳曹军和西面刘璋、南面刘备的包围之中，极难守御 [Inference]"
+    ],
+    "node_type": "transition",
+    "title": "S6 → S7: 避实击虚与南征四郡",
+    "time_period": "209年底"
+  },
+  "S7": {
+    "snapshot_id": "S7_Liu_Bei_Secures_Four_Commanderies",
+    "time_period": "209年底 - 210年",
+    "description": "建安十四年末，荆州割据均势发生颠覆性失衡。刘备彻底消化荆南四郡，收降黄忠、魏延，并吸纳大批荆州本土遗贤（如庞统等），实力暴涨。周瑜领南郡太守，但发现江东只占领了一条狭窄的沿江走廊，西进无力，战略处境尴尬。此时同盟内部因南郡归属产生激烈冲突。",
+    "factions": {
+      "cao_cao_group": {
+        "name": "曹操集团",
+        "leader": "曹操",
+        "objective_state": {
+          "location": "襄阳 / 樊城 / 南阳郡 [Fact]",
+          "military_strength": "南方攻势彻底停止，关中马超集团叛乱风险上升，防线收缩至襄阳一线 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_liu_bei": "刘备已非昔日客军，得荆南四郡后羽翼已丰，已成为与孙权并列的南方巨头 [Inference]",
+            "toward_sun_liu": "两家虽然瓜分了荆州，但必然会因为领土接壤（尤其是南郡所有权）产生内讧 [Inference]"
+          },
+          "strategic_goals": [
+            "退守荆北防线，积极拉拢孙权或刘备，企图分化孙刘同盟 [Inference]"
+          ]
+        },
+        "pressures": [
+          "关中、凉州等西方割据势力（马超、韩遂等）开始蠢蠢欲动，后方大本营面临侧翼军事威胁 [Fact]"
+        ],
+        "current_action": "在邺城修筑铜雀台，进行修养生息；在南郡至襄阳一线暗中挑唆孙刘关系 [Inference]"
+      },
+      "sun_quan_group": {
+        "name": "江东孙权集团",
+        "leader": "孙权 (周瑜前方督领)",
+        "objective_state": {
+          "location": "南郡 (江陵) / 江夏郡部分地盘 [Fact]",
+          "military_strength": "周瑜三万水军经历一年攻坚战，编制残缺，极需休整；孙权亲自围攻合肥亦无功而返 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_liu_bei_growth": "刘备不费吹灰之力夺得荆南，实力竟隐隐有超越己方在荆州驻军之势，严重威胁江东长江上游安全 [Inference]",
+            "toward_zhou_yu_plan": "周瑜强烈主张采取强硬手段：将刘备软禁在江东，吞并其军队，进而攻蜀 [Account]"
+          },
+          "strategic_goals": [
+            "遏制刘备势力进一步膨胀，夺回或控制荆南四郡的实际主导权 [Inference]",
+            "维持南郡防线，防止曹操乘机反攻 [Fact]"
+          ]
+        },
+        "pressures": [
+          "南郡防线稳固度不佳，防御面巨大且直接暴露于曹仁反攻锋芒下，江东财政与兵源难以持久支撑 [Inference]"
+        ],
+        "current_action": "孙权在京口积极筹划，一方面招刘备为妹夫以示安抚（政治联姻），一方面暗中评估周瑜的“软禁刘备并图蜀”计划 [Fact]"
+      },
+      "liu_bei_group": {
+        "name": "刘备集团",
+        "leader": "刘备",
+        "objective_state": {
+          "location": "公安 / 领荆南四郡 [Fact]",
+          "military_strength": "水陆军规模已达数万人，吸纳了庞统、黄忠、魏延等一流文武，真正具备了与孙、曹三足鼎立的班底 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_nanjun": "虽然占领了四郡，但四郡被南郡（江陵）挡在后方，犹如死水，无北上中原之通道，必须夺取或“借得”南郡 [Fact]",
+            "toward_sun_quan": "孙权虽有忌惮但害怕同盟破裂。自己必须展现诚意，甚至“以身入局”亲自前往江东谈判 [Inference]"
+          },
+          "strategic_goals": [
+            "向孙权索要/租借南郡（江陵），突破地理闭塞，获得西进和北上的双重战略跳板 [Fact]"
+          ]
+        },
+        "pressures": [
+          "周瑜随时可能对自己动手，公安新营地处于周瑜水军的顺流打击之下，地缘安全极差 [Inference]"
+        ],
+        "current_action": "刘备亲自带领赵云、诸葛亮等少数随从奔赴江东治所京口，亲自面见孙权“求督荆州”（求借南郡）[Fact]"
+      }
+    },
+    "node_type": "snapshot",
+    "title": "S7: 刘备暴涨与借地博弈"
+  },
+  "DEC_SQ_LN": {
+    "decision_id": "DEC_Sun_Quan_Lease_Nanjun",
+    "decision_maker": "孙权",
+    "context": "建安十五年（210年），刘备亲自前往京口求借南郡。此时主战派核心周瑜病危并于不久后去世，死前极力劝阻借地。而继任者鲁肃则从大局出发，极力劝说孙权将南郡借给刘备。孙权面临艰难抉择。 [Fact]",
+    "pressures_undergone": [
+      "曹操威名虽挫但实力仍旧天下第一，襄阳曹军对南郡（江陵）保持极高军事压力，江东在江陵的驻军难以为继 [Fact]",
+      "鲁肃极力陈说利害，指出‘曹操实力仍强，江东新附荆州人心未定，不如借南郡于刘备，抚安荆州吏民，并树立刘备作为北面挡箭牌，此乃多曹敌、少曹友之策’ [Fact]",
+      "若拒绝借地，同盟关系面临在战后立刻破裂的风险。一旦同盟决裂，曹操定会乘虚而入，两家皆亡 [Inference]"
+    ],
+    "options": [
+      {
+        "option_id": "OPT_Lease_Nanjun",
+        "description": "同意鲁肃建议，将南郡（江陵）租借给刘备督领，孙刘同盟以“借荆州”新形式得以维系 [Fact]",
+        "intended_outcome": "通过地缘置换，让刘备彻底暴露在曹操进攻的最前线，转嫁江东防御压力，维持抗曹联合阵线 [Fact]",
+        "actual_outcome": "刘备获得了梦寐以求的北上及西入蜀川（益州）的完美战略跳板，并于数年后成功攻占四川，实现真正的三分天下 [Fact]。但这一策略也深埋了江东战略嫉妒与地缘仇恨的种子，直接导致了219年吕蒙白衣渡江、关羽战败被杀的同盟血色破裂 [Inference]。",
+        "is_selected": true,
+        "node_type": "option",
+        "title": "方案: 同意鲁肃建议，将南郡（江陵）租借给刘备督领，孙刘同盟以“借荆州”新形式得以维系 [Fact]",
+        "time_period": "210年"
+      },
+      {
+        "option_id": "OPT_Contain_Liu_Bei",
+        "description": "听从周瑜遗计，断然拒绝借地，采取强硬手段软禁刘备，分化并吞并刘备集团 [Fact]",
+        "intended_outcome": "彻底消除后顾之忧，将荆南四郡与南郡融为一体，由江东独立发起西征夺取益州，实现南北二分天下 [Account]",
+        "actual_outcome": "（未选择）极可能导致刘备集团在荆南起兵反抗，同盟彻底破裂。曹操必会乘两家内讧大举南下，江东由于战线过长（合肥、江陵、荆南），极易满盘皆输 [Inference]",
+        "is_selected": false,
+        "node_type": "option",
+        "title": "方案: 听从周瑜遗计，断然拒绝借地，采取强硬手段软禁刘备，分化并吞并刘备集团 [Fact]",
+        "time_period": "210年"
+      }
+    ],
+    "node_type": "decision",
+    "title": "决策节点: 租借南郡（借荆州）",
+    "time_period": "210年"
+  },
+  "OPT_LEASE_NJ": {
+    "option_id": "OPT_Lease_Nanjun",
+    "description": "同意鲁肃建议，将南郡（江陵）租借给刘备督领，孙刘同盟以“借荆州”新形式得以维系 [Fact]",
+    "intended_outcome": "通过地缘置换，让刘备彻底暴露在曹操进攻的最前线，转嫁江东防御压力，维持抗曹联合阵线 [Fact]",
+    "actual_outcome": "刘备获得了梦寐以求的北上及西入蜀川（益州）的完美战略跳板，并于数年后成功攻占四川，实现真正的三分天下 [Fact]。但这一策略也深埋了江东战略嫉妒与地缘仇恨的种子，直接导致了219年吕蒙白衣渡江、关羽战败被杀的同盟血色破裂 [Inference]。",
+    "is_selected": true,
+    "node_type": "option",
+    "title": "方案: 同意鲁肃建议，将南郡（江陵）租借给刘备督领，孙刘同盟以“借荆州”新形式得以维系 [Fact]",
+    "time_period": "210年"
+  },
+  "OPT_CONTAIN_LB": {
+    "option_id": "OPT_Contain_Liu_Bei",
+    "description": "听从周瑜遗计，断然拒绝借地，采取强硬手段软禁刘备，分化并吞并刘备集团 [Fact]",
+    "intended_outcome": "彻底消除后顾之忧，将荆南四郡与南郡融为一体，由江东独立发起西征夺取益州，实现南北二分天下 [Account]",
+    "actual_outcome": "（未选择）极可能导致刘备集团在荆南起兵反抗，同盟彻底破裂。曹操必会乘两家内讧大举南下，江东由于战线过长（合肥、江陵、荆南），极易满盘皆输 [Inference]",
+    "is_selected": false,
+    "node_type": "option",
+    "title": "方案: 听从周瑜遗计，断然拒绝借地，采取强硬手段软禁刘备，分化并吞并刘备集团 [Fact]",
+    "time_period": "210年"
+  },
+  "T7_8": {
+    "transition_id": "T_S7_to_S8",
+    "trigger_drivers": [
+      {
+        "driver_id": "D_Zhou_Yu_Death_And_Lu_Su_Succession",
+        "description": "大都督周瑜在巴丘筹备西征时病逝（210年），强硬派核心陨落；温和温厚的主盟派鲁肃继任，全面推行联刘抗曹路线 [Fact]"
+      },
+      {
+        "driver_id": "D_Sun_Quan_Accepts_Lease",
+        "description": "孙权正式批准“借南郡”决议，将江陵及南郡长江北岸控制权移交刘备 [Fact]"
+      }
+    ],
+    "structural_impact": [
+      "孙刘同盟关系在新均势下得到巩固，避免了同盟在战后立即破裂，曹操挑唆计划落空 [Inference]",
+      "刘备得以名正言顺进驻南郡，在名义上与物理上都获得了完整“荆州”的战略中枢 [Inference]"
+    ],
+    "node_type": "transition",
+    "title": "S7 → S8: 借地均势与川蜀跳板",
+    "time_period": "210年底"
+  },
+  "S8": {
+    "snapshot_id": "S8_Jingzhou_Divided_Three_Kingdoms_Prototype",
+    "time_period": "210年底 - 211年",
+    "description": "最终形成的第一阶段割据稳定状态。荆州地盘三分：曹操控制南阳、襄阳（荆北）；孙权控制江夏郡大部与沿江要塞；刘备实际控制南郡（江陵）及荆南四郡。以此为起点，刘备派遣关羽镇守江陵（荆州），自身开始主力西征夺取益州。这是“三分天下（三国鼎立）”最经典的、也是地缘政治上最稳定的初始博弈状态。",
+    "factions": {
+      "cao_cao_group": {
+        "name": "曹操集团",
+        "leader": "曹操",
+        "objective_state": {
+          "location": "北方大本营 / 荆北（襄阳、南阳）[Fact]",
+          "military_strength": "恢复元气，依然保持对南方的绝对陆军威压，但将战略重心彻底移向西方，准备对关中马超动手 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_liu_bei": "听说孙权将荆州（南郡）借给刘备，惊得手中毛笔落地（曹公闻权以土地业备，方作书，落笔于地），深知刘备如‘蛟龙得水’，未来将极难对付 [Fact]",
+            "toward_sun_quan": "孙权借地实为借刀杀人。短期内南方同盟牢固，无法强攻 [Inference]"
+          },
+          "strategic_goals": [
+            "向西扩张，消灭关中割据，彻底扫平西北，为日后与刘、孙持久战打下基础 [Fact]"
+          ]
+        },
+        "pressures": [
+          "西方马超、韩遂同盟是关中肘腋之患，必须在刘备消化南郡前迅速解决 [Inference]"
+        ],
+        "current_action": "曹操亲率大军向关中挺进，拉开渭南之战序幕；同时命曹仁屯兵樊城、襄阳密切监视关羽 [Fact]"
+      },
+      "sun_quan_group": {
+        "name": "江东孙权集团",
+        "leader": "孙权",
+        "objective_state": {
+          "location": "建业 (治所) / 柴桑 / 江夏郡部分要塞 [Fact]",
+          "military_strength": "水军战力完好，主力收缩回柴桑与江东本土防线，后勤压力大幅减轻 [Inference]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_liu_bei": "刘备目前是江东北面的天然盾牌。既然已经借地，必须敦促其尽快对襄阳曹军施加压力 [Inference]",
+            "toward_alliance": "在自己有能力独立图蜀前，必须死死维持孙刘同盟以抵御曹操 [Inference]"
+          },
+          "strategic_goals": [
+            "休养生息，向南面交州方向渗透扩张以开辟第二战略后方 [Fact]",
+            "在北线合肥方向继续寻求对曹操的突破 [Inference]"
+          ]
+        },
+        "pressures": [
+          "南郡虽借出，但由于江东与刘备领土犬牙交错，防务安全感下降，江东内部始终存在对刘备的极高警惕 [Inference]"
+        ],
+        "current_action": "派步骘南征交州（降服士燮），开拓江东南部版图；同时密切关注刘备入蜀动向 [Fact]"
+      },
+      "liu_bei_group": {
+        "name": "刘备集团",
+        "leader": "刘备",
+        "objective_state": {
+          "location": "江陵 (南郡治所) / 公安 / 荆南四郡 [Fact]",
+          "military_strength": "水陆军达五万人以上，关羽、张飞、赵云各有重兵，战略态势极为开阔 [Fact]"
+        },
+        "subjective_state": {
+          "cognition": {
+            "toward_jingzhou_future": "江陵虽好但始终是四战之地，且是‘借来’之地，无法作为万世基业，必须依照‘隆中对’尽快夺取益州 [Inference]",
+            "toward_guan_yu": "关羽性格刚烈、有大将之才，最适宜留在江陵镇守荆州大门，威慑曹操与孙权 [Inference]"
+          },
+          "strategic_goals": [
+            "以南郡为后勤和军事基地，借益州牧刘璋邀请“抗张鲁”的机会，率主力西进入蜀夺取四川 [Fact]"
+          ]
+        },
+        "pressures": [
+          "南郡北临曹操、东接孙权，战略压力极大，必须留守最顶尖的统帅（关羽）和军师（诸葛亮）协同镇守 [Inference]"
+        ],
+        "current_action": "刘备任命关羽统领荆州防务，自己则亲率庞统、黄忠、魏延及数万步兵逆江而上，正式开启入蜀西征之战 [Fact]"
+      }
+    },
+    "node_type": "snapshot",
+    "title": "S8: 三分天下与入蜀西征"
+  }
+};
+
+    // Expand / collapse the transition card on the timeline itself
+    function toggleConduit(nodeId, event) {
+        if (event) event.stopPropagation(); // Avoid triggering card click
+        const content = document.getElementById('conduit-content-' + nodeId);
+        const btn = event ? event.target : null;
+        
+        if (content.classList.contains('expanded')) {
+            content.classList.remove('expanded');
+            if (btn) btn.innerText = '⚙️ 展开演变细节与驱动力';
+        } else {
+            content.classList.add('expanded');
+            if (btn) btn.innerText = '▲ 收起演变细节';
+        }
+        
+        // Also highlight this node
+        selectNode(nodeId);
+    }
+    
+    // Jump to a specific timeline node
+    function jumpToNode(nodeId) {
+        if (!nodeId) return;
+        const targetElement = document.getElementById('item-' + nodeId);
+        if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            selectNode(nodeId);
+        }
+    }
+
+    // Helper to select a node and highlight it
+    function selectNode(nodeId, event) {
+        if (event) event.stopPropagation();
+        
+        // Remove 'selected' class from all timeline items
+        const items = document.querySelectorAll('.timeline-item');
+        items.forEach(item => item.classList.remove('selected'));
+        
+        // Also remove selected styles from option cards
+        const opts = document.querySelectorAll('.fork-option-card');
+        opts.forEach(opt => opt.style.boxShadow = 'none');
+        
+        // Find owner timeline item
+        let ownerId = nodeId;
+        if (nodeId.startsWith('OPT_')) {
+            if (nodeId === 'OPT_SURR' || nodeId === 'OPT_RESIST') ownerId = 'DEC_LC';
+            else if (nodeId === 'OPT_RESIST_EAST' || nodeId === 'OPT_SURR_EAST') ownerId = 'DEC_SQ';
+            else if (nodeId === 'OPT_LEASE_NJ' || nodeId === 'OPT_CONTAIN_LB') ownerId = 'DEC_SQ_LN';
+        }
+        
+        const ownerItem = document.getElementById('item-' + ownerId);
+        if (ownerItem) ownerItem.classList.add('selected');
+        
+        // Render details inside the sidebar drawer
+        renderSidebar(nodeId);
+    }
+    
+    // Formatting metadata tags
+    function formatTextWithTags(text) {
+        if (!text) return '';
+        return text
+            .replace(/\[Fact\]/gi, '<span class="meta-tag tag-fact">史料事实</span>')
+            .replace(/\[Account\]/gi, '<span class="meta-tag tag-account">史家记述</span>')
+            .replace(/\[Inference\]/gi, '<span class="meta-tag tag-inference">合理推断</span>')
+            .replace(/\[Interpretation\]/gi, '<span class="meta-tag tag-interpretation">后世解释</span>');
+    }
+
+    // List rendering helper
+    function renderHtmlList(arr) {
+        if (!arr || arr.length === 0) return '<li>无可用记录</li>';
+        return arr.map(item => `<li>${formatTextWithTags(item)}</li>`).join('');
+    }
+
+    // Dynamic Sidebar Details Drawer Renderer
+    function renderSidebar(nodeId) {
+        const sidebar = document.getElementById('sidebar-content');
+        const data = nodeDatabase[nodeId];
+        
+        if (!data) {
+            sidebar.innerHTML = `
+                <div class="welcome-msg">
+                    <h3>❌ 未加载详细数据</h3>
+                    <p>未能找到该节点 (${nodeId}) 的史料细节描述。</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        
+        if (data.node_type === 'snapshot') {
+            html = `
+                <div class="header">
+                    <h2>${data.title}</h2>
+                    <div class="subtitle">时间：${data.time_period}</div>
+                </div>
+                <p style="font-size:14px; line-height:1.5; color:#cbd5e1; margin-bottom:16px;">${data.description}</p>
+                <h3 style="margin-top:16px; font-size:15px; color:#60a5fa; border-bottom:1px solid #475569; padding-bottom:6px; margin-bottom:12px;">各集团主客观状态深度剖析</h3>
+            `;
+            
+            for (let fKey in data.factions) {
+                const f = data.factions[fKey];
+                const baseMarkup = f.base ? `<div class="faction-meta">割据大本营: ${f.base}</div>` : '';
+                
+                // Objective State fields
+                let objStateMarkup = '';
+                if (f.objective_state) {
+                    if (f.objective_state.location) {
+                        objStateMarkup += `<li><b>驻防位置:</b> ${formatTextWithTags(f.objective_state.location)}</li>`;
+                    }
+                    if (f.objective_state.military_strength) {
+                        objStateMarkup += `<li><b>当前实力:</b> ${formatTextWithTags(f.objective_state.military_strength)}</li>`;
+                    }
+                    if (f.objective_state.territory) {
+                        objStateMarkup += `<li><b>控制地盘:</b><ul>${renderHtmlList(f.objective_state.territory)}</ul></li>`;
+                    }
+                    if (f.objective_state.military_resources) {
+                        objStateMarkup += `<li><b>战略物资:</b><ul>${renderHtmlList(f.objective_state.military_resources)}</ul></li>`;
+                    }
+                }
+                
+                // Subjective Cognition fields
+                let cognitionsMarkup = '';
+                if (f.subjective_state && f.subjective_state.cognition) {
+                    cognitionsMarkup = Object.entries(f.subjective_state.cognition)
+                        .map(([k, v]) => {
+                            const label = window.cognitionLabels?.[k] || k;
+                            return `<li><span class="cognition-label">${label}</span>${formatTextWithTags(v)}</li>`;
+                        }).join('');
+                }
+                
+                html += `
+                    <div class="faction-box">
+                        <div class="faction-title">
+                            ${f.name}
+                            <span style="font-size:12px; font-weight:normal; color:#94a3b8;">领袖: ${f.leader || '无'}</span>
+                        </div>
+                        ${baseMarkup}
+                        
+                        <div class="section-sub-title">🗺️ 客观物理状态 (Objective State)</div>
+                        <ul>
+                            ${objStateMarkup || '<li>无可用客观状态记录</li>'}
+                        </ul>
+                        
+                        <div class="section-sub-title">👁️ 主观地缘认知 (Subjective Cognition)</div>
+                        ${cognitionsMarkup ? `<ul>${cognitionsMarkup}</ul>` : '<p style="font-size:12px; color:#64748b; margin-left:6px;">无关系认知数据</p>'}
+                        
+                        <div class="section-sub-title">🎯 战略目标与压力</div>
+                        <div style="font-size:12px; color:#94a3b8; margin-left:6px; margin-bottom:4px;"><b>战略目标：</b></div>
+                        <ul style="margin-bottom:6px;">
+                            ${renderHtmlList(f.subjective_state?.strategic_goals || [])}
+                        </ul>
+                        <div style="font-size:12px; color:#94a3b8; margin-left:6px; margin-bottom:4px;"><b>核心压力：</b></div>
+                        <ul style="margin-bottom:6px;">
+                            ${renderHtmlList(f.subjective_state?.pressures || [])}
+                        </ul>
+                        
+                        <div class="section-sub-title">🚩 正在进行的行动 (Current Action)</div>
+                        <p style="font-size:13px; margin:4px 0 0 6px; color:#cbd5e1;">${formatTextWithTags(f.current_action)}</p>
+                    </div>
+                `;
+            }
+            
+            // Instabilities check
+            let instList = [];
+            if (data.model_state_analysis) {
+                for (let key in data.model_state_analysis) {
+                    if (Array.isArray(data.model_state_analysis[key])) {
+                        instList = instList.concat(data.model_state_analysis[key]);
+                    }
+                }
+            }
+            if (instList.length > 0) {
+                html += `
+                    <div class="faction-box" style="border-left: 4px solid #ef4444; background:#2d191e;">
+                        <div class="section-sub-title" style="color:#fca5a5; font-size:14px; margin-top:0;">⚠️ 状态失稳剖析 (Why Unstable?)</div>
+                        <ul style="margin-top:6px;">
+                            ${renderHtmlList(instList)}
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+        else if (data.node_type === 'transition') {
+            html = `
+                <div class="header" style="border-bottom-color: #ef4444;">
+                    <h2>${data.title}</h2>
+                    <div class="subtitle">过渡ID: ${data.transition_id}</div>
+                </div>
+                <div class="section-sub-title" style="color:#fca5a5; font-size:14px;">⚡ 促成演变的驱动力 (Trigger Drivers)</div>
+                <div class="faction-box" style="border-top:3px solid #ef4444;">
+                    <ul style="padding-left:14px;">
+                        ${data.trigger_drivers?.map(d => `<li><b>${d.driver_id}</b>: ${formatTextWithTags(d.description)}</li>`).join('') || '<li>无记录</li>'}
+                    </ul>
+                </div>
+                <div class="section-sub-title" style="font-size:14px;">🏗️ 系统性结构冲击 (Structural Impact)</div>
+                <div class="faction-box">
+                    <ul style="padding-left:14px;">
+                        ${renderHtmlList(data.structural_impact || [])}
+                    </ul>
+                </div>
+            `;
+        }
+        else if (data.node_type === 'decision') {
+            html = `
+                <div class="header" style="border-bottom-color: #f59e0b;">
+                    <h2>${data.title}</h2>
+                    <div class="subtitle">决策者：${data.decision_maker}</div>
+                </div>
+                <div class="section-sub-title" style="font-size:14px;">📝 历史复杂背景 (Context)</div>
+                <p style="font-size:13.5px; line-height:1.5; background:#111827; padding:12px; border-radius:6px; border:1px solid #334155; color:#cbd5e1;">
+                    ${formatTextWithTags(data.context)}
+                </p>
+                <div class="section-sub-title" style="color: #fcd34d; font-size:14px;">💥 决策者当时承受的核心压力 (Pressures Undergone)</div>
+                <div class="faction-box" style="border-left: 4px solid #f59e0b; background: #2d2216;">
+                    <ul style="padding-left:14px;">
+                        ${renderHtmlList(data.pressures_undergone || [])}
+                    </ul>
+                </div>
+                <div style="background: #111827; padding: 12px; border-radius: 6px; text-align: center; font-size: 12px; color: #94a3b8; border: 1px dashed #475569;">
+                    👈 请在左侧时间轴中，点击决策卡下方的两个<b>平行路线卡片</b>，可在此查看各决策结局的 What-If 深度推演。
+                </div>
+            `;
+        }
+        else if (data.node_type === 'option') {
+            const isSel = data.is_selected;
+            html = `
+                <div class="header" style="border-bottom-color: ${isSel ? '#10b981' : '#64748b'};">
+                    <h2>${isSel ? '✅ 已选历史路线' : '❌ 未选 What-If 分支'}: ${data.description}</h2>
+                    <div class="subtitle">方案ID: ${data.option_id}</div>
+                </div>
+                
+                <div class="section-sub-title" style="font-size: 14px; color:#10b981; border-left-color: #10b981;">🎯 方案设计意图 (Intended Outcome)</div>
+                <p style="font-size:13.5px; line-height:1.5; background:#111827; padding:12px; border-radius:6px; border:1px solid #334155; color:#cbd5e1; margin-bottom:16px;">
+                    ${formatTextWithTags(data.intended_outcome)}
+                </p>
+                
+                <div class="section-sub-title" style="font-size: 14px; color:${isSel ? '#60a5fa' : '#94a3b8'}; border-left-color: ${isSel ? '#60a5fa' : '#94a3b8'};">📊 历史实际发生 / 演化后果 (Actual Outcome)</div>
+                <p style="font-size:13.5px; line-height:1.5; background:${isSel ? '#064e3b' : '#1e293b'}; padding:12px; border-radius:6px; border:1px solid ${isSel ? '#047857' : '#475569'}; color:#e2e8f0;">
+                    ${formatTextWithTags(data.actual_outcome)}
+                </p>
+            `;
+        }
+        
+        sidebar.innerHTML = html;
+    }
+</script>
+<script>
+    // V6 progressive enhancements: navigator, faction focus, and snapshot diff.
+    (() => {
+        const snapshotIds = ['S0','S1','S2','S3','S4','S5','S6','S7','S8'];
+        const originalRenderSidebar = renderSidebar;
+        let activeFaction = {};
+
+        // Keep internal data keys out of the reader-facing UI.
+        window.cognitionLabels = {
+            toward_cao_cao: '对曹操', toward_liu_bei: '对刘备', toward_sun_quan: '对孙权',
+            toward_liu_biao: '对刘表', toward_liu_cong: '对刘琮', toward_guan_yu: '对关羽',
+            toward_zhou_yu: '对周瑜', toward_huang_gai: '对黄盖', toward_jingzhou: '对荆州',
+            toward_jingzhou_future: '对荆州未来', toward_jing_nan: '对荆南', toward_nanjun: '对南郡',
+            toward_nanjun_value: '对南郡价值', toward_liu_bei_growth: '对刘备扩张',
+            toward_sun_liu: '对孙刘联盟', toward_alliance: '对联盟', toward_cao_ships: '对曹军水战',
+            toward_fire_threat: '对火攻威胁', toward_jiang_river: '对长江防线',
+            toward_wind_direction: '对风向', toward_zhou_yu_plan: '对周瑜方案',
+            internal_faction_split: '内部意见分歧'
+        };
+
+        const escapeHtml = value => String(value ?? '')
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+        function makeMiniNavigator() {
+            const host = document.getElementById('quick-jump');
+            if (!host || document.getElementById('mini-nav')) return;
+            const nav = document.createElement('div');
+            nav.id = 'mini-nav';
+            nav.className = 'mini-nav';
+            nav.innerHTML = `<span aria-hidden="true">208</span><div class="mini-nav-track">${snapshotIds.map(id =>
+                `<button type="button" data-node="${id}" title="跳转到 ${id}">${id}</button>`).join('')}</div><span aria-hidden="true">211</span>`;
+            nav.querySelectorAll('button').forEach(button => button.addEventListener('click', () => {
+                const id = button.dataset.node;
+                const select = document.getElementById('jump-select');
+                if (select) select.value = id;
+                jumpToNode(id);
+                setActiveMini(id);
+            }));
+            host.appendChild(nav);
+        }
+
+        function setActiveMini(nodeId) {
+            document.querySelectorAll('#mini-nav button').forEach(button =>
+                button.classList.toggle('active', button.dataset.node === nodeId));
+        }
+
+        function flattenState(faction) {
+            const state = {};
+            const objective = faction?.objective_state || {};
+            const subjective = faction?.subjective_state || {};
+            if (objective.location) state['位置'] = objective.location;
+            if (objective.territory) state['控制地盘'] = objective.territory.join('；');
+            if (objective.military_strength) state['军力'] = objective.military_strength;
+            if (objective.military_resources) state['军资'] = objective.military_resources.join('；');
+            if (subjective.strategic_goals) state['战略目标'] = subjective.strategic_goals.join('；');
+            if (subjective.pressures) state['核心压力'] = subjective.pressures.join('；');
+            if (faction.current_action) state['当前行动'] = faction.current_action;
+            return state;
+        }
+
+        function renderDiff(nodeId, panel) {
+            const currentIndex = snapshotIds.indexOf(nodeId);
+            const previousId = currentIndex > 0 ? snapshotIds[currentIndex - 1] : null;
+            if (!previousId) {
+                panel.innerHTML = '<h4>状态 Diff</h4><p>这是时间线的初始状态，没有更早的 Snapshot 可比较。</p>';
+                return;
+            }
+            const current = nodeDatabase[nodeId];
+            const previous = nodeDatabase[previousId];
+            const blocks = [];
+            Object.entries(current.factions || {}).forEach(([key, faction]) => {
+                const before = flattenState(previous.factions?.[key] || {});
+                const after = flattenState(faction);
+                const labels = [...new Set([...Object.keys(before), ...Object.keys(after)])];
+                const changes = labels.filter(label => before[label] !== after[label]);
+                if (changes.length) {
+                    const rows = changes.map(label => `<div class="diff-row">
+                        <span class="diff-key">${escapeHtml(label)}</span>
+                        <span class="diff-before">${formatTextWithTags(escapeHtml(before[label] || '—'))}</span>
+                        <span class="diff-arrow" aria-hidden="true">→</span>
+                        <span class="diff-after">${formatTextWithTags(escapeHtml(after[label] || '—'))}</span>
+                    </div>`).join('');
+                    blocks.push(`<section class="diff-faction">
+                        <h5>${escapeHtml(faction.name)}</h5>
+                        <div class="diff-labels"><span>字段</span><span>前一状态</span><span></span><span>当前状态</span></div>
+                        ${rows}
+                    </section>`);
+                }
+            });
+            panel.innerHTML = `<h4>状态 Diff · ${previousId} → ${nodeId}</h4>${blocks.join('') || '<p>未发现结构化字段变化。</p>'}`;
+        }
+
+        function enhanceSidebar(nodeId) {
+            const data = nodeDatabase[nodeId];
+            const content = document.getElementById('sidebar-content');
+            if (!data || !content || data.node_type !== 'snapshot') return;
+            const header = content.querySelector('.header');
+            if (!header) return;
+            const factionEntries = Object.entries(data.factions || {});
+            const boxes = Array.from(content.querySelectorAll('.faction-box')).slice(0, factionEntries.length);
+            const focusKey = activeFaction[nodeId] || factionEntries[0]?.[0];
+            const tabs = document.createElement('div');
+            tabs.className = 'faction-tabs';
+            tabs.setAttribute('role', 'tablist');
+            tabs.innerHTML = factionEntries.map(([key, faction]) =>
+                `<button type="button" role="tab" data-faction="${escapeHtml(key)}">${escapeHtml(faction.name)}</button>`).join('');
+            header.appendChild(tabs);
+            const diffButton = document.createElement('button');
+            diffButton.type = 'button';
+            diffButton.className = 'diff-toggle';
+            diffButton.textContent = '↔ 与前一状态比较';
+            header.appendChild(diffButton);
+            const diffPanel = document.createElement('div');
+            diffPanel.className = 'state-diff';
+            diffPanel.hidden = true;
+            content.insertBefore(diffPanel, header.nextSibling);
+            diffButton.addEventListener('click', () => {
+                diffPanel.hidden = !diffPanel.hidden;
+                if (!diffPanel.hidden) renderDiff(nodeId, diffPanel);
+                diffButton.textContent = diffPanel.hidden ? '↔ 与前一状态比较' : '× 收起状态 Diff';
+            });
+            const activateFaction = key => {
+                activeFaction[nodeId] = key;
+                tabs.querySelectorAll('button').forEach(button => button.classList.toggle('active', button.dataset.faction === key));
+                boxes.forEach((box, index) => { box.hidden = factionEntries[index]?.[0] !== key; });
+            };
+            tabs.querySelectorAll('button').forEach(button => button.addEventListener('click', () => activateFaction(button.dataset.faction)));
+            activateFaction(focusKey);
+        }
+
+        // Replace only the renderer entry point; the original database and node event handlers remain intact.
+        renderSidebar = function(nodeId) {
+            originalRenderSidebar(nodeId);
+            enhanceSidebar(nodeId);
+        };
+
+        function initPaneResizer() {
+            const divider = document.getElementById('pane-divider');
+            const sidebar = document.getElementById('sidebar-area');
+            if (!divider || !sidebar) return;
+            const minSidebar = 380;
+            const maxSidebar = 760;
+            const minTimeline = 520;
+
+            const setWidth = width => {
+                const available = window.innerWidth - minTimeline - divider.offsetWidth;
+                const bounded = Math.max(minSidebar, Math.min(maxSidebar, Math.min(width, available)));
+                sidebar.style.flexBasis = `${bounded}px`;
+                divider.setAttribute('aria-valuenow', Math.round(bounded));
+            };
+
+            divider.addEventListener('pointerdown', event => {
+                if (window.innerWidth <= 900) return;
+                event.preventDefault();
+                const startX = event.clientX;
+                const startWidth = sidebar.getBoundingClientRect().width;
+                document.body.classList.add('is-resizing');
+                divider.setPointerCapture(event.pointerId);
+
+                const stop = () => {
+                    document.body.classList.remove('is-resizing');
+                    divider.removeEventListener('pointermove', move);
+                    divider.removeEventListener('pointerup', stop);
+                    divider.removeEventListener('pointercancel', stop);
+                };
+                const move = moveEvent => setWidth(startWidth - (moveEvent.clientX - startX));
+                divider.addEventListener('pointermove', move);
+                divider.addEventListener('pointerup', stop);
+                divider.addEventListener('pointercancel', stop);
+            });
+
+            divider.addEventListener('keydown', event => {
+                if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+                event.preventDefault();
+                const current = sidebar.getBoundingClientRect().width;
+                setWidth(current + (event.key === 'ArrowLeft' ? 24 : -24));
+            });
+        }
+
+        makeMiniNavigator();
+        initPaneResizer();
+        setActiveMini('S0');
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            item.addEventListener('click', () => setActiveMini(item.id.replace('item-', '')));
+        });
+    })();
+</script>
+</body>
+</html>
