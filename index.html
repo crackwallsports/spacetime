@@ -21,7 +21,7 @@
 <body class="public-site">
   <header class="site-header">
     <a class="brand" href="/spacetime/"><span class="brand-mark">R</span><span>Rabbit3</span></a>
-    <nav><a href="/spacetime/">HOME</a><a href="/spacetime/Now.html">NOW</a><a href="/spacetime/Archive.html">ARCHIVE</a><a href="/spacetime/About.html">ABOUT</a></nav>
+    <nav><a href="/spacetime/">HOME</a><a href="/spacetime/Now.html">NOW</a><a href="/spacetime/Archive.html">ARCHIVE</a><a href="/spacetime/Projects.html">PROJECTS</a><a href="/spacetime/About.html">ABOUT</a></nav>
   </header>
   <main class="site-main single-page is-short-page special-page special-home">
     
@@ -40,7 +40,7 @@
 (() => {
   const currentPath = window.location.pathname;
   const pagesMarker = currentPath.indexOf("/Pages/");
-  const specialPath = ["/Now.html", "/Archive.html", "/About.html"].find((path) => currentPath.endsWith(path));
+  const specialPath = ["/Now.html", "/Archive.html", "/Projects.html", "/About.html"].find((path) => currentPath.endsWith(path));
   const basePath = pagesMarker >= 0
     ? currentPath.slice(0, pagesMarker)
     : specialPath
@@ -54,7 +54,7 @@
     try {
       const previous = new URL(referrer);
       if (previous.origin !== window.location.origin) return "NOW";
-      return ({ "/Now.html": "NOW", "/Archive.html": "ARCHIVE", "/About.html": "ABOUT", "/": "HOME" })[sitePath(previous.pathname)] || "BACK";
+      return ({ "/Now.html": "NOW", "/Archive.html": "ARCHIVE", "/Projects.html": "PROJECTS", "/About.html": "ABOUT", "/": "HOME" })[sitePath(previous.pathname)] || "BACK";
     } catch {
       return "NOW";
     }

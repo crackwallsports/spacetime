@@ -16,12 +16,12 @@
   <link rel="stylesheet" href="/spacetime/site-theme.css">
   <link rel="alternate" type="application/rss+xml" title="Rabbit3 Feed" href="/spacetime/feed.xml">
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","@id":"https://crackwallsports.github.io/spacetime/Pages/20260826T220122561/#article","url":"https://crackwallsports.github.io/spacetime/Pages/20260826T220122561/","headline":"AI编程观点","datePublished":"2026-08-26T22:01:00+08:00","description":"我现在越来越不关心编程了。"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","@id":"https://crackwallsports.github.io/spacetime/Pages/20260826T220122561/#article","url":"https://crackwallsports.github.io/spacetime/Pages/20260826T220122561/","headline":"AI编程观点","datePublished":"2026-08-26T22:01:00+08:00","dateModified":"2026-08-26T22:01:00+08:00","description":"我现在越来越不关心编程了。"}</script>
 </head>
 <body class="public-site">
   <header class="site-header">
     <a class="brand" href="/spacetime/"><span class="brand-mark">R</span><span>Rabbit3</span></a>
-    <nav><a href="/spacetime/">HOME</a><a href="/spacetime/Now.html">NOW</a><a href="/spacetime/Archive.html">ARCHIVE</a><a href="/spacetime/About.html">ABOUT</a></nav>
+    <nav><a href="/spacetime/">HOME</a><a href="/spacetime/Now.html">NOW</a><a href="/spacetime/Archive.html">ARCHIVE</a><a href="/spacetime/Projects.html">PROJECTS</a><a href="/spacetime/About.html">ABOUT</a></nav>
   </header>
   <main class="site-main single-page">
     <div class="page-reading-intro"><div class="page-reading-intro-main">
@@ -699,7 +699,7 @@
 (() => {
   const currentPath = window.location.pathname;
   const pagesMarker = currentPath.indexOf("/Pages/");
-  const specialPath = ["/Now.html", "/Archive.html", "/About.html"].find((path) => currentPath.endsWith(path));
+  const specialPath = ["/Now.html", "/Archive.html", "/Projects.html", "/About.html"].find((path) => currentPath.endsWith(path));
   const basePath = pagesMarker >= 0
     ? currentPath.slice(0, pagesMarker)
     : specialPath
@@ -713,7 +713,7 @@
     try {
       const previous = new URL(referrer);
       if (previous.origin !== window.location.origin) return "NOW";
-      return ({ "/Now.html": "NOW", "/Archive.html": "ARCHIVE", "/About.html": "ABOUT", "/": "HOME" })[sitePath(previous.pathname)] || "BACK";
+      return ({ "/Now.html": "NOW", "/Archive.html": "ARCHIVE", "/Projects.html": "PROJECTS", "/About.html": "ABOUT", "/": "HOME" })[sitePath(previous.pathname)] || "BACK";
     } catch {
       return "NOW";
     }
