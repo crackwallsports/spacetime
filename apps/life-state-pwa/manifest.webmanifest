@@ -1,0 +1,14 @@
+{
+  "name": "Life State",
+  "short_name": "State",
+  "description": "极简个人状态记录器：记录当前状态与一天中的状态流动。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0e1014",
+  "theme_color": "#0e1014",
+  "icons": [
+    {"src":"./icons/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"./icons/icon-512.png","sizes":"512x512","type":"image/png"}
+  ]
+}

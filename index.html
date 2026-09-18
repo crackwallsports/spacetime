@@ -90,18 +90,96 @@
     if (!lightbox) {
       lightbox = document.createElement('dialog');
       lightbox.className = 'page-image-lightbox';
-      lightbox.innerHTML = '<button type="button" class="page-image-lightbox-close" aria-label="Close image">×</button><img alt="">';
+      lightbox.innerHTML = '<button type="button" class="page-image-lightbox-close" aria-label="Close image">×</button>'
+        + '<div class="page-image-lightbox-toolbar" role="toolbar" aria-label="Image view controls">'
+        + '<button type="button" data-image-zoom-out aria-label="Zoom out">−</button>'
+        + '<input type="range" data-image-zoom-range min="1" max="4" step="0.25" value="1" aria-label="Image zoom">'
+        + '<output data-image-zoom-value>100%</output>'
+        + '<button type="button" data-image-zoom-in aria-label="Zoom in">+</button>'
+        + '<button type="button" data-image-fit aria-label="Fit image to window">Fit</button></div>'
+        + '<div class="page-image-lightbox-stage" tabindex="0" aria-label="Image canvas">'
+        + '<div class="page-image-lightbox-canvas"><img alt=""></div></div>';
       lightbox.addEventListener('click', (event) => {
         if (event.target === lightbox) closeLightbox();
       });
-      lightbox.querySelector('button').addEventListener('click', closeLightbox);
+      const stage = lightbox.querySelector('.page-image-lightbox-stage');
+      const canvas = lightbox.querySelector('.page-image-lightbox-canvas');
+      const preview = lightbox.querySelector('.page-image-lightbox-canvas img');
+      const zoomRange = lightbox.querySelector('[data-image-zoom-range]');
+      const zoomValue = lightbox.querySelector('[data-image-zoom-value]');
+      const zoomOut = lightbox.querySelector('[data-image-zoom-out]');
+      const zoomIn = lightbox.querySelector('[data-image-zoom-in]');
+      const fit = lightbox.querySelector('[data-image-fit]');
+      let zoom = 1;
+      let fitScale = 1;
+      const updateControls = () => {
+        zoomRange.value = String(zoom);
+        zoomValue.value = String(Math.round(zoom * 100)) + '%';
+        zoomValue.textContent = String(Math.round(zoom * 100)) + '%';
+        zoomRange.setAttribute('aria-valuetext', String(Math.round(zoom * 100)) + '%');
+        zoomOut.disabled = zoom <= 1;
+        zoomIn.disabled = zoom >= 4;
+      };
+      const updateLayout = (preserveCenter = true) => {
+        if (!preview.naturalWidth || !preview.naturalHeight) return;
+        const style = getComputedStyle(stage);
+        const horizontalPadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+        const verticalPadding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+        const availableWidth = Math.max(1, stage.clientWidth - horizontalPadding);
+        const availableHeight = Math.max(1, stage.clientHeight - verticalPadding);
+        fitScale = Math.min(availableWidth / preview.naturalWidth, availableHeight / preview.naturalHeight);
+        const oldCanvasWidth = canvas.clientWidth || stage.clientWidth;
+        const oldCanvasHeight = canvas.clientHeight || stage.clientHeight;
+        const oldCenterX = stage.scrollLeft + stage.clientWidth / 2;
+        const oldCenterY = stage.scrollTop + stage.clientHeight / 2;
+        const imageWidth = Math.max(1, Math.round(preview.naturalWidth * fitScale * zoom));
+        const imageHeight = Math.max(1, Math.round(preview.naturalHeight * fitScale * zoom));
+        preview.style.width = imageWidth + 'px';
+        preview.style.height = imageHeight + 'px';
+        canvas.style.width = Math.max(availableWidth, imageWidth) + 'px';
+        canvas.style.height = Math.max(availableHeight, imageHeight) + 'px';
+        if (preserveCenter) {
+          const centerX = oldCanvasWidth ? oldCenterX / oldCanvasWidth : 0.5;
+          const centerY = oldCanvasHeight ? oldCenterY / oldCanvasHeight : 0.5;
+          stage.scrollLeft = Math.max(0, Math.min(stage.scrollWidth - stage.clientWidth, centerX * canvas.scrollWidth - stage.clientWidth / 2));
+          stage.scrollTop = Math.max(0, Math.min(stage.scrollHeight - stage.clientHeight, centerY * canvas.scrollHeight - stage.clientHeight / 2));
+        } else {
+          stage.scrollLeft = Math.max(0, (stage.scrollWidth - stage.clientWidth) / 2);
+          stage.scrollTop = Math.max(0, (stage.scrollHeight - stage.clientHeight) / 2);
+        }
+        updateControls();
+      };
+      const setZoom = (value, preserveCenter = true) => {
+        zoom = Math.max(1, Math.min(4, Math.round(value * 4) / 4));
+        updateLayout(preserveCenter);
+      };
+      const changeZoom = (amount) => setZoom(zoom + amount);
+      lightbox.querySelector('.page-image-lightbox-close').addEventListener('click', closeLightbox);
+      zoomOut.addEventListener('click', () => changeZoom(-0.25));
+      zoomIn.addEventListener('click', () => changeZoom(0.25));
+      fit.addEventListener('click', () => setZoom(1, false));
+      zoomRange.addEventListener('input', () => setZoom(Number(zoomRange.value)));
+      stage.addEventListener('wheel', (event) => {
+        if (!event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        changeZoom(event.deltaY > 0 ? -0.25 : 0.25);
+      }, { passive: false });
+      stage.addEventListener('keydown', (event) => {
+        if (event.key === '+' || event.key === '=') { event.preventDefault(); changeZoom(0.25); }
+        else if (event.key === '-') { event.preventDefault(); changeZoom(-0.25); }
+        else if (event.key === '0') { event.preventDefault(); setZoom(1, false); }
+      });
+      preview.addEventListener('load', () => updateLayout(false));
+      if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => updateLayout()).observe(stage);
       lightbox.addEventListener('cancel', closeLightbox);
       document.body.append(lightbox);
     }
-    const preview = lightbox.querySelector('img');
+    const preview = lightbox.querySelector('.page-image-lightbox-canvas img');
     preview.src = image.currentSrc || image.src;
     preview.alt = image.alt;
-    lightbox.showModal();
+    lightbox.querySelector('[data-image-zoom-range]').value = '1';
+    lightbox.querySelector('[data-image-zoom-range]').dispatchEvent(new Event('input'));
+    if (!lightbox.open) lightbox.showModal();
     lightbox.querySelector('button').focus();
   };
   const bindImageLightbox = () => {

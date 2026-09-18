@@ -25,7 +25,8 @@
   </header>
   <main class="site-main projects-page">
     <div class="projects-intro"><h1>PROJECTS</h1><p>Selected work, experiments and applications.</p></div>
-    <section class="projects-list" aria-label="Projects"><article class="project-card has-cover"><div class="project-card-media"><img loading="lazy" decoding="async" src="/spacetime/Pages/20260918T162047831/%E8%BD%BB%E9%87%8F%E8%AE%B0%E8%B4%A6%E6%BC%94%E7%A4%BA-%E5%B0%81%E9%9D%A2.png" alt="Project: 个人轻量记账演示"></div><div class="project-card-body"><div class="project-card-meta"><span>lplf-demo</span><time datetime="2026-09-18T16:55:00+08:00">18 SEP 2026 · 16:55</time></div><h2>Project: 个人轻量记账演示</h2><p>LPLF 入门 Demo</p><div class="project-card-actions"><a href="/spacetime/Pages/20260918T162047831/">View project ↗</a><a href="/spacetime/apps/lplf-demo/" target="_blank" rel="noopener noreferrer">Open app ↗</a></div></div></article>
+    <section class="projects-list" aria-label="Projects"><article class="project-card has-cover"><div class="project-card-media"><img loading="lazy" decoding="async" src="/spacetime/Pages/20260918T175500171/Screenshot-macos.webp" alt="项目: 生活状态"></div><div class="project-card-body"><div class="project-card-meta"><span>life-state-pwa</span><time datetime="2026-09-18T18:04:00+08:00">18 SEP 2026 · 18:04</time></div><h2>项目: 生活状态</h2><p>一个 local-first 的个人状态记录器 PWA。</p><div class="project-card-actions"><a href="/spacetime/Pages/20260918T175500171/">View project ↗</a><a href="/spacetime/apps/life-state-pwa/" target="_blank" rel="noopener noreferrer">Open app ↗</a></div></div></article>
+<article class="project-card has-cover"><div class="project-card-media"><img loading="lazy" decoding="async" src="/spacetime/Pages/20260918T162047831/%E8%BD%BB%E9%87%8F%E8%AE%B0%E8%B4%A6%E6%BC%94%E7%A4%BA-%E5%B0%81%E9%9D%A2.png" alt="Project: 个人轻量记账演示"></div><div class="project-card-body"><div class="project-card-meta"><span>lplf-demo</span><time datetime="2026-09-18T16:55:00+08:00">18 SEP 2026 · 16:55</time></div><h2>Project: 个人轻量记账演示</h2><p>LPLF 入门 Demo</p><div class="project-card-actions"><a href="/spacetime/Pages/20260918T162047831/">View project ↗</a><a href="/spacetime/apps/lplf-demo/" target="_blank" rel="noopener noreferrer">Open app ↗</a></div></div></article>
 <article class="project-card has-cover"><div class="project-card-media"><img loading="lazy" decoding="async" src="/spacetime/Pages/20260905T010849870/%E5%8E%86%E5%8F%B2%E6%BC%94%E5%8C%96%E5%9B%BE%E8%B0%B1-%E8%B5%A4%E5%A3%81%E4%B9%8B%E6%88%98.webp" alt="Project: 历史状态演变之三国(赤壁之战)"></div><div class="project-card-body"><div class="project-card-meta"><span>Timeline-SanGuo</span><time datetime="2026-09-05T01:45:00+08:00">05 SEP 2026 · 01:45</time></div><h2>Project: 历史状态演变之三国(赤壁之战)</h2><p>以时间为轴，以状态为面，以因果为线，观察历史如何一步步演化。</p><div class="project-card-actions"><a href="/spacetime/Pages/20260905T010849870/">View project ↗</a><a href="/spacetime/apps/timeline-sanguo/" target="_blank" rel="noopener noreferrer">Open app ↗</a></div></div></article></section>
   </main>
   <footer class="site-footer"><p>Ideas · Stories · Worlds · Experiments · Anything</p><div><span>© 2026 Rabbit</span></div></footer>
@@ -83,18 +84,96 @@
     if (!lightbox) {
       lightbox = document.createElement('dialog');
       lightbox.className = 'page-image-lightbox';
-      lightbox.innerHTML = '<button type="button" class="page-image-lightbox-close" aria-label="Close image">×</button><img alt="">';
+      lightbox.innerHTML = '<button type="button" class="page-image-lightbox-close" aria-label="Close image">×</button>'
+        + '<div class="page-image-lightbox-toolbar" role="toolbar" aria-label="Image view controls">'
+        + '<button type="button" data-image-zoom-out aria-label="Zoom out">−</button>'
+        + '<input type="range" data-image-zoom-range min="1" max="4" step="0.25" value="1" aria-label="Image zoom">'
+        + '<output data-image-zoom-value>100%</output>'
+        + '<button type="button" data-image-zoom-in aria-label="Zoom in">+</button>'
+        + '<button type="button" data-image-fit aria-label="Fit image to window">Fit</button></div>'
+        + '<div class="page-image-lightbox-stage" tabindex="0" aria-label="Image canvas">'
+        + '<div class="page-image-lightbox-canvas"><img alt=""></div></div>';
       lightbox.addEventListener('click', (event) => {
         if (event.target === lightbox) closeLightbox();
       });
-      lightbox.querySelector('button').addEventListener('click', closeLightbox);
+      const stage = lightbox.querySelector('.page-image-lightbox-stage');
+      const canvas = lightbox.querySelector('.page-image-lightbox-canvas');
+      const preview = lightbox.querySelector('.page-image-lightbox-canvas img');
+      const zoomRange = lightbox.querySelector('[data-image-zoom-range]');
+      const zoomValue = lightbox.querySelector('[data-image-zoom-value]');
+      const zoomOut = lightbox.querySelector('[data-image-zoom-out]');
+      const zoomIn = lightbox.querySelector('[data-image-zoom-in]');
+      const fit = lightbox.querySelector('[data-image-fit]');
+      let zoom = 1;
+      let fitScale = 1;
+      const updateControls = () => {
+        zoomRange.value = String(zoom);
+        zoomValue.value = String(Math.round(zoom * 100)) + '%';
+        zoomValue.textContent = String(Math.round(zoom * 100)) + '%';
+        zoomRange.setAttribute('aria-valuetext', String(Math.round(zoom * 100)) + '%');
+        zoomOut.disabled = zoom <= 1;
+        zoomIn.disabled = zoom >= 4;
+      };
+      const updateLayout = (preserveCenter = true) => {
+        if (!preview.naturalWidth || !preview.naturalHeight) return;
+        const style = getComputedStyle(stage);
+        const horizontalPadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+        const verticalPadding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+        const availableWidth = Math.max(1, stage.clientWidth - horizontalPadding);
+        const availableHeight = Math.max(1, stage.clientHeight - verticalPadding);
+        fitScale = Math.min(availableWidth / preview.naturalWidth, availableHeight / preview.naturalHeight);
+        const oldCanvasWidth = canvas.clientWidth || stage.clientWidth;
+        const oldCanvasHeight = canvas.clientHeight || stage.clientHeight;
+        const oldCenterX = stage.scrollLeft + stage.clientWidth / 2;
+        const oldCenterY = stage.scrollTop + stage.clientHeight / 2;
+        const imageWidth = Math.max(1, Math.round(preview.naturalWidth * fitScale * zoom));
+        const imageHeight = Math.max(1, Math.round(preview.naturalHeight * fitScale * zoom));
+        preview.style.width = imageWidth + 'px';
+        preview.style.height = imageHeight + 'px';
+        canvas.style.width = Math.max(availableWidth, imageWidth) + 'px';
+        canvas.style.height = Math.max(availableHeight, imageHeight) + 'px';
+        if (preserveCenter) {
+          const centerX = oldCanvasWidth ? oldCenterX / oldCanvasWidth : 0.5;
+          const centerY = oldCanvasHeight ? oldCenterY / oldCanvasHeight : 0.5;
+          stage.scrollLeft = Math.max(0, Math.min(stage.scrollWidth - stage.clientWidth, centerX * canvas.scrollWidth - stage.clientWidth / 2));
+          stage.scrollTop = Math.max(0, Math.min(stage.scrollHeight - stage.clientHeight, centerY * canvas.scrollHeight - stage.clientHeight / 2));
+        } else {
+          stage.scrollLeft = Math.max(0, (stage.scrollWidth - stage.clientWidth) / 2);
+          stage.scrollTop = Math.max(0, (stage.scrollHeight - stage.clientHeight) / 2);
+        }
+        updateControls();
+      };
+      const setZoom = (value, preserveCenter = true) => {
+        zoom = Math.max(1, Math.min(4, Math.round(value * 4) / 4));
+        updateLayout(preserveCenter);
+      };
+      const changeZoom = (amount) => setZoom(zoom + amount);
+      lightbox.querySelector('.page-image-lightbox-close').addEventListener('click', closeLightbox);
+      zoomOut.addEventListener('click', () => changeZoom(-0.25));
+      zoomIn.addEventListener('click', () => changeZoom(0.25));
+      fit.addEventListener('click', () => setZoom(1, false));
+      zoomRange.addEventListener('input', () => setZoom(Number(zoomRange.value)));
+      stage.addEventListener('wheel', (event) => {
+        if (!event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        changeZoom(event.deltaY > 0 ? -0.25 : 0.25);
+      }, { passive: false });
+      stage.addEventListener('keydown', (event) => {
+        if (event.key === '+' || event.key === '=') { event.preventDefault(); changeZoom(0.25); }
+        else if (event.key === '-') { event.preventDefault(); changeZoom(-0.25); }
+        else if (event.key === '0') { event.preventDefault(); setZoom(1, false); }
+      });
+      preview.addEventListener('load', () => updateLayout(false));
+      if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => updateLayout()).observe(stage);
       lightbox.addEventListener('cancel', closeLightbox);
       document.body.append(lightbox);
     }
-    const preview = lightbox.querySelector('img');
+    const preview = lightbox.querySelector('.page-image-lightbox-canvas img');
     preview.src = image.currentSrc || image.src;
     preview.alt = image.alt;
-    lightbox.showModal();
+    lightbox.querySelector('[data-image-zoom-range]').value = '1';
+    lightbox.querySelector('[data-image-zoom-range]').dispatchEvent(new Event('input'));
+    if (!lightbox.open) lightbox.showModal();
     lightbox.querySelector('button').focus();
   };
   const bindImageLightbox = () => {
