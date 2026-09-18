@@ -75,7 +75,8 @@ html::-webkit-scrollbar-corner { background: transparent; }
 .page-content .page-image-target { cursor: zoom-in; }
 .timeline .page-image-target { cursor: default; }
 .page-content .page-image-target:focus-visible { outline: 2px solid var(--orange); outline-offset: 5px; }
-.page-image-lightbox { display: flex; flex-direction: column; width: min(94vw, 1320px); height: min(92vh, 960px); max-width: none; max-height: 92vh; box-sizing: border-box; margin: auto; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--paper) 96%, transparent); color: var(--ink); box-shadow: 0 24px 80px color-mix(in srgb, #000 42%, transparent); overflow: hidden; }
+.page-image-lightbox { position: fixed; inset: 0; display: flex; flex-direction: column; width: min(94vw, 1320px); height: min(92vh, 960px); max-width: none; max-height: 92vh; box-sizing: border-box; margin: auto; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--paper) 96%, transparent); color: var(--ink); box-shadow: 0 24px 80px color-mix(in srgb, #000 42%, transparent); overflow: hidden; }
+dialog.page-image-lightbox:not([open]) { display: none; }
 .page-image-lightbox::backdrop { background: color-mix(in srgb, #000 70%, transparent); }
 .page-image-lightbox-toolbar { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; min-height: 48px; padding: 8px 56px 8px 12px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--line) 14%, var(--paper)); }
 .page-image-lightbox-toolbar button { min-width: 32px; height: 32px; padding: 0 9px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); font: 600 12px/1 Arial, sans-serif; cursor: pointer; }
