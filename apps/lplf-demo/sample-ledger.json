@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "currency": "CNY",
+  "accounts": [
+    { "id": "cash", "name": "现金", "opening_balance": 100000 },
+    { "id": "bank", "name": "银行卡", "opening_balance": 500000 },
+    { "id": "food", "name": "餐饮", "opening_balance": 0 }
+  ],
+  "transactions": [
+    {
+      "id": "tx-001",
+      "date": "2026-09-01",
+      "out": "cash",
+      "amount": 2500,
+      "in": "food",
+      "label": "早餐",
+      "note": "示例交易"
+    },
+    {
+      "id": "tx-002",
+      "date": "2026-09-03",
+      "out": "bank",
+      "amount": 300000,
+      "in": "cash",
+      "label": "取现",
+      "note": ""
+    }
+  ]
+}

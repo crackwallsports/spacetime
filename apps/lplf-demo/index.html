@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>轻量记账 Demo</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div><p class="eyebrow">LPLF 入门 Demo</p><h1>轻量记账</h1></div>
+    <div class="toolbar"><button id="undo-button" class="button secondary" disabled>撤销</button><button id="redo-button" class="button secondary" disabled>重做</button><button id="import-button" class="button secondary">导入 JSON</button><button id="export-button" class="button primary">导出 / 备份</button><button id="example-button" class="button example">示例数据</button><button id="clear-button" class="button destructive">清空</button><input id="file-input" type="file" accept="application/json,.json" hidden><input id="month" type="month" hidden></div>
+  </header>
+  <main>
+    <div id="notice" class="notice" role="status"></div>
+    <nav class="tabs" aria-label="主要视图"><button class="tab active" data-view="about">关于</button><button class="tab" data-view="transactions">交易</button><button class="tab" data-view="accounts">账户</button><button class="tab" data-view="report">月报</button><button class="tab" data-view="annual">年报</button></nav>
+    <section id="report-view" class="view"></section>
+    <section id="annual-view" class="view hidden"></section>
+    <section id="transactions-view" class="view hidden"></section>
+    <section id="accounts-view" class="view hidden"></section>
+    <section id="about-view" class="view hidden"></section>
+  </main>
+  <footer>数据只保存在当前浏览器页面内。请定期导出 JSON 作为备份。</footer>
+  <script src="app.js?v=0.1.2"></script>
+</body>
+</html>
