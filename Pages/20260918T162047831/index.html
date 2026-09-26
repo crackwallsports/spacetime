@@ -82,6 +82,74 @@
 })();
 </script>
   <script>
+const bindGalleryCarousel = function bindGalleryCarousel(gallery) {
+  const track = gallery.querySelector(".page-gallery-track");
+  const previous = gallery.querySelector("[data-gallery-prev]");
+  const next = gallery.querySelector("[data-gallery-next]");
+  const counter = gallery.querySelector("[data-gallery-counter]");
+  if (!(track instanceof HTMLElement) || !(previous instanceof HTMLButtonElement) || !(next instanceof HTMLButtonElement) || !(counter instanceof HTMLElement)) return () => {};
+
+  const slides = Array.from(track.querySelectorAll(".page-gallery-slide"));
+  if (slides.length < 2) return () => {};
+
+  let activeIndex = Math.max(0, slides.findIndex((slide) => slide.classList.contains("is-active")));
+  let scrollTimer = 0;
+  const update = (index = activeIndex) => {
+    activeIndex = index;
+    slides.forEach((slide, slideIndex) => {
+      const active = slideIndex === index;
+      slide.classList.toggle("is-active", active);
+      slide.setAttribute("aria-hidden", String(!active));
+      if (active) slide.removeAttribute("inert");
+      else slide.setAttribute("inert", "");
+    });
+    previous.disabled = index === 0;
+    next.disabled = index === slides.length - 1;
+    counter.textContent = `${index + 1} / ${slides.length}`;
+  };
+  const go = (direction) => {
+    const targetIndex = Math.max(0, Math.min(slides.length - 1, activeIndex + direction));
+    if (targetIndex === activeIndex) return;
+    const target = slides[targetIndex];
+    const left = target.getBoundingClientRect().left - track.getBoundingClientRect().left + track.scrollLeft;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    update(targetIndex);
+    track.scrollTo({ left, behavior: reducedMotion ? "auto" : "smooth" });
+  };
+  const handleScroll = () => {
+    window.clearTimeout(scrollTimer);
+    scrollTimer = window.setTimeout(() => {
+      const trackLeft = track.getBoundingClientRect().left;
+      const index = slides.reduce((closestIndex, slide, slideIndex) => {
+        const closestDistance = Math.abs(slides[closestIndex].getBoundingClientRect().left - trackLeft);
+        const distance = Math.abs(slide.getBoundingClientRect().left - trackLeft);
+        return distance < closestDistance ? slideIndex : closestIndex;
+      }, 0);
+      update(index);
+    }, 90);
+  };
+  const handleKeyDown = (event) => {
+    if (event.target instanceof HTMLButtonElement) return;
+    if (event.key === "ArrowLeft") { event.preventDefault(); go(-1); }
+    else if (event.key === "ArrowRight") { event.preventDefault(); go(1); }
+  };
+  const handlePrevious = () => go(-1);
+  const handleNext = () => go(1);
+
+  track.addEventListener("scroll", handleScroll, { passive: true });
+  gallery.addEventListener("keydown", handleKeyDown);
+  previous.addEventListener("click", handlePrevious);
+  next.addEventListener("click", handleNext);
+  update();
+
+  return () => {
+    window.clearTimeout(scrollTimer);
+    track.removeEventListener("scroll", handleScroll);
+    gallery.removeEventListener("keydown", handleKeyDown);
+    previous.removeEventListener("click", handlePrevious);
+    next.removeEventListener("click", handleNext);
+  };
+};
 (() => {
   let lightbox;
   const closeLightbox = () => {
@@ -270,6 +338,7 @@
     window.addEventListener('scroll', setActiveHeading, { passive: true });
     setActiveHeading();
     bindImageLightbox();
+    document.querySelectorAll('.single-page .page-gallery').forEach(bindGalleryCarousel);
     bindNowImages();
     const tocMobileToggle = document.querySelector('.page-toc-mobile-toggle');
     const tocList = document.getElementById('page-toc-list');

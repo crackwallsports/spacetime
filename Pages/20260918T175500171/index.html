@@ -10,13 +10,13 @@
   <meta property="og:title" content="项目: 生活状态">
   <meta property="og:description" content="一个 local-first 的个人状态记录器 PWA。">
   <meta property="og:url" content="/spacetime/Pages/20260918T175500171/">
-  
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="/spacetime/Pages/20260918T175500171/Screenshot-macos.webp">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="/spacetime/site.css">
   <link rel="stylesheet" href="/spacetime/site-theme.css">
   <link rel="alternate" type="application/rss+xml" title="Rabbit3 Feed" href="/spacetime/feed.xml">
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","@id":"https://crackwallsports.github.io/spacetime/Pages/20260918T175500171/#article","url":"https://crackwallsports.github.io/spacetime/Pages/20260918T175500171/","headline":"项目: 生活状态","datePublished":"2026-09-18T17:55:00+08:00","dateModified":"2026-09-18T18:48:00+08:00","description":"一个 local-first 的个人状态记录器 PWA。"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","@id":"https://crackwallsports.github.io/spacetime/Pages/20260918T175500171/#article","url":"https://crackwallsports.github.io/spacetime/Pages/20260918T175500171/","headline":"项目: 生活状态","datePublished":"2026-09-18T17:55:00+08:00","dateModified":"2026-09-18T22:17:00+08:00","description":"一个 local-first 的个人状态记录器 PWA。","image":"https://crackwallsports.github.io/spacetime/Pages/20260918T175500171/Screenshot-macos.webp"}</script>
 </head>
 <body class="public-site">
   <header class="site-header">
@@ -28,7 +28,7 @@
       <a class="back-button" href="/spacetime/Now.html" data-rabbit-return>← NOW</a>
       <div class="page-date">18 SEP 2026 · 17:55</div>
     </div></div>
-    
+    <figure class="page-cover"><img src="/spacetime/Pages/20260918T175500171/Screenshot-macos.webp" alt="项目: 生活状态"></figure>
     <article class="page-content page-content--reader"><div><div class="page-reading-layout"><aside class="page-reading-sidebar"><nav class="page-toc" aria-label="On this page"><div class="page-toc-heading"><strong>On this page</strong><span class="page-toc-actions"><button type="button" class="page-toc-mobile-toggle" aria-expanded="true" aria-controls="page-toc-list">Hide outline</button><button type="button" class="page-toc-toggle" aria-label="Collapse all sections">Collapse all</button></span></div><ol id="page-toc-list"><li class="page-toc-level-2" data-heading-level="2"><a href="#本版重点">本版重点</a></li><li class="page-toc-level-2" data-heading-level="2"><a href="#iphone-测试">iPhone 测试</a></li></ol></nav><section class="page-reading-meta" aria-label="Page information"><div class="page-toc-heading"><strong>Page info</strong></div><dl><div><dt>Date</dt><dd><time datetime="2026-09-18T17:55:00+08:00">2026-09-18</time></dd></div></dl></section></aside><div class="page-reading-main"><h1 id="生活状态">生活状态</h1>
 <blockquote>
 <p>一个 local-first 的个人状态记录器 PWA。</p>
@@ -102,6 +102,74 @@
 })();
 </script>
   <script>
+const bindGalleryCarousel = function bindGalleryCarousel(gallery) {
+  const track = gallery.querySelector(".page-gallery-track");
+  const previous = gallery.querySelector("[data-gallery-prev]");
+  const next = gallery.querySelector("[data-gallery-next]");
+  const counter = gallery.querySelector("[data-gallery-counter]");
+  if (!(track instanceof HTMLElement) || !(previous instanceof HTMLButtonElement) || !(next instanceof HTMLButtonElement) || !(counter instanceof HTMLElement)) return () => {};
+
+  const slides = Array.from(track.querySelectorAll(".page-gallery-slide"));
+  if (slides.length < 2) return () => {};
+
+  let activeIndex = Math.max(0, slides.findIndex((slide) => slide.classList.contains("is-active")));
+  let scrollTimer = 0;
+  const update = (index = activeIndex) => {
+    activeIndex = index;
+    slides.forEach((slide, slideIndex) => {
+      const active = slideIndex === index;
+      slide.classList.toggle("is-active", active);
+      slide.setAttribute("aria-hidden", String(!active));
+      if (active) slide.removeAttribute("inert");
+      else slide.setAttribute("inert", "");
+    });
+    previous.disabled = index === 0;
+    next.disabled = index === slides.length - 1;
+    counter.textContent = `${index + 1} / ${slides.length}`;
+  };
+  const go = (direction) => {
+    const targetIndex = Math.max(0, Math.min(slides.length - 1, activeIndex + direction));
+    if (targetIndex === activeIndex) return;
+    const target = slides[targetIndex];
+    const left = target.getBoundingClientRect().left - track.getBoundingClientRect().left + track.scrollLeft;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    update(targetIndex);
+    track.scrollTo({ left, behavior: reducedMotion ? "auto" : "smooth" });
+  };
+  const handleScroll = () => {
+    window.clearTimeout(scrollTimer);
+    scrollTimer = window.setTimeout(() => {
+      const trackLeft = track.getBoundingClientRect().left;
+      const index = slides.reduce((closestIndex, slide, slideIndex) => {
+        const closestDistance = Math.abs(slides[closestIndex].getBoundingClientRect().left - trackLeft);
+        const distance = Math.abs(slide.getBoundingClientRect().left - trackLeft);
+        return distance < closestDistance ? slideIndex : closestIndex;
+      }, 0);
+      update(index);
+    }, 90);
+  };
+  const handleKeyDown = (event) => {
+    if (event.target instanceof HTMLButtonElement) return;
+    if (event.key === "ArrowLeft") { event.preventDefault(); go(-1); }
+    else if (event.key === "ArrowRight") { event.preventDefault(); go(1); }
+  };
+  const handlePrevious = () => go(-1);
+  const handleNext = () => go(1);
+
+  track.addEventListener("scroll", handleScroll, { passive: true });
+  gallery.addEventListener("keydown", handleKeyDown);
+  previous.addEventListener("click", handlePrevious);
+  next.addEventListener("click", handleNext);
+  update();
+
+  return () => {
+    window.clearTimeout(scrollTimer);
+    track.removeEventListener("scroll", handleScroll);
+    gallery.removeEventListener("keydown", handleKeyDown);
+    previous.removeEventListener("click", handlePrevious);
+    next.removeEventListener("click", handleNext);
+  };
+};
 (() => {
   let lightbox;
   const closeLightbox = () => {
@@ -290,6 +358,7 @@
     window.addEventListener('scroll', setActiveHeading, { passive: true });
     setActiveHeading();
     bindImageLightbox();
+    document.querySelectorAll('.single-page .page-gallery').forEach(bindGalleryCarousel);
     bindNowImages();
     const tocMobileToggle = document.querySelector('.page-toc-mobile-toggle');
     const tocList = document.getElementById('page-toc-list');
