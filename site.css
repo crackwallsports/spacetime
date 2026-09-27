@@ -201,6 +201,7 @@ dialog.page-image-lightbox:not([open]) { display: none; }
 .page-copy-link:focus-visible, .back-to-top:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
 .page-section { margin: 0 0 20px; }
 .page-section > summary { display: inline-block; max-width: 100%; padding: 4px 6px 4px 0; cursor: pointer; list-style: none; vertical-align: top; }
+.page-section > :not(summary):not(.page-section) { margin-left: 18px; }
 .page-section > summary::-webkit-details-marker { display: none; }
 .page-section > summary h1, .page-section > summary h2, .page-section > summary h3 { position: relative; min-width: 0; margin: 0; padding: 0 0 0 18px; border: 0; }
 .page-section > summary h1::before, .page-section > summary h2::before, .page-section > summary h3::before { content: ""; position: absolute; top: calc(.54em - 5px); left: 0; width: 6px; height: 6px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg); transition: transform .16s ease, border-color .16s ease; }
