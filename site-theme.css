@@ -19,4 +19,8 @@
   --site-footer-width: 880px;
   --site-footer-statement-size: 35px;
   --site-header-height: 62px;
+  --page-cover-ratio: 16 / 8.5;
+  --page-cover-fit: cover;
+  --page-cover-width: 560px;
+  --page-cover-radius: 12px;
 }
