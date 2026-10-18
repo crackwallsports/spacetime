@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="40" y1="24" x2="468" y2="496" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#171b27"/>
+      <stop offset="1" stop-color="#090d14"/>
+    </linearGradient>
+    <linearGradient id="trace" x1="154" y1="75" x2="358" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#70e4dd"/>
+      <stop offset=".52" stop-color="#82b9ff"/>
+      <stop offset="1" stop-color="#bb9bff"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="matrix(0 190 -190 0 257 250)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#567ec9" stop-opacity=".23"/>
+      <stop offset="1" stop-color="#567ec9" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="108" y="30" width="296" height="452" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="118" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="118" fill="url(#glow)"/>
+  <rect x="1.5" y="1.5" width="509" height="509" rx="116.5" stroke="#a7c5f8" stroke-opacity=".12" stroke-width="3"/>
+  <path d="M256 84v345" stroke="url(#trace)" stroke-linecap="round" stroke-width="12" opacity=".23" filter="url(#soft)"/>
+  <path d="M256 84v345" stroke="url(#trace)" stroke-linecap="round" stroke-width="8"/>
+  <path d="M256 120h89M256 203h-61M256 286h117M256 369h-82" stroke="url(#trace)" stroke-linecap="round" stroke-width="8" opacity=".78"/>
+  <circle cx="256" cy="120" r="15" fill="#111722" stroke="#72e0dc" stroke-width="8"/>
+  <circle cx="256" cy="203" r="15" fill="#111722" stroke="#80c1ff" stroke-width="8"/>
+  <circle cx="256" cy="286" r="19" fill="#e7fbff" stroke="#83c9ff" stroke-width="9"/>
+  <circle cx="256" cy="286" r="32" fill="#71ceff" fill-opacity=".12"/>
+  <circle cx="256" cy="369" r="15" fill="#111722" stroke="#b59bff" stroke-width="8"/>
+  <path d="M345 111v18M186 194v18M373 277v18M174 360v18" stroke="#e7fbff" stroke-linecap="round" stroke-width="4" opacity=".9"/>
+</svg>
