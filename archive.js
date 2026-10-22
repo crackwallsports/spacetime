@@ -35,7 +35,11 @@
     const tags = Array.isArray(value.tags) ? [...new Set(value.tags.filter((tag) => typeof tag === "string").map((tag) => tag.trim()).filter(Boolean))] : [];
     const title = typeof value.title === "string" ? value.title.trim() : "";
     const excerpt = typeof value.excerpt === "string" ? value.excerpt.trim() : "";
+    const coverFit = ["cover", "contain"].includes(value.coverFit) ? value.coverFit : "";
+    const position = typeof value.coverPosition === "string" ? /^(\d{1,3})% (\d{1,3})%$/.exec(value.coverPosition) : null;
+    const coverPosition = position && Number(position[1]) <= 100 && Number(position[2]) <= 100 ? `${Number(position[1])}% ${Number(position[2])}%` : "";
     return {
+      coverFit, coverPosition,
       id: typeof value.id === "string" ? value.id : "",
       url: typeof value.url === "string" ? value.url : "",
       title,
@@ -77,7 +81,8 @@
 
   function card(entry) {
     const hasCover = Boolean(entry.cover);
-    const media = hasCover ? `<div class="archive-card-media"><img loading="lazy" decoding="async" src="${escapeHtml(siteUrl(entry.cover))}" alt="${escapeHtml(entry.title || "Page cover")}"></div>` : "";
+    const thumbnailStyle = [entry.coverFit ? `--cover-fit:${entry.coverFit}` : "", entry.coverPosition ? `--cover-position:${entry.coverPosition}` : ""].filter(Boolean).join(";");
+    const media = hasCover ? `<div class="archive-card-media"${thumbnailStyle ? ` style="${thumbnailStyle}"` : ""}><img loading="lazy" decoding="async" src="${escapeHtml(siteUrl(entry.cover))}" alt="${escapeHtml(entry.title || "Page cover")}"></div>` : "";
     const displayTags = entry.tags.includes("测试用例")
       ? ["测试用例", ...entry.tags.filter((tag) => tag !== "测试用例")].slice(0, 3)
       : entry.tags.slice(0, 3);
